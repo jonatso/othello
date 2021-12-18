@@ -24,6 +24,8 @@ body {
 .tile {
   width: 100px;
   height: 100px;
+  display: grid;
+  place-items: center;
 }
 
 .tile--odd {
@@ -35,7 +37,21 @@ body {
 }
 
 .piece {
-  width: 50%;
+  height: 70%;
+  width: 70%;
   border-radius: 50%;
   background-color: #ebecd0;
+  box-shadow: 0px 3.5px 3.5px rgba(0, 0, 0, 0.15);
+}
+
+.piece--white {
+  background-color: #ebecd0;
+}
+
+.piece--black {
+  background-color: #111111;
+}
+
+.piece--transparent {
+  opacity: 0.4;
 }
