@@ -4,3 +4,38 @@ body {
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
 }
+
+.app {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  background-color: rgb(38, 41, 37);
+}
+
+.board {
+  height: 800px;
+  width: 800px;
+  background-color: aqua;
+  display: grid;
+  grid-template-columns: repeat(8, 100px);
+  grid-template-rows: repeat(8, 100px);
+}
+
+.tile {
+  width: 100px;
+  height: 100px;
+}
+
+.tile--odd {
+  background-color: #779556;
+}
+
+.tile--even {
+  background-color: #69814e;
+}
+
+.piece {
+  width: 50%;
+  border-radius: 50%;
+  background-color: #ebecd0;
+}
