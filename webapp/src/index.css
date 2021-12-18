@@ -13,8 +13,8 @@ body {
 }
 
 .board {
-  height: 80vmin;
-  width: 80vmin;
+  height: 90vmin;
+  width: 90vmin;
   background-color: aqua;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
