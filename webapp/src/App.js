@@ -49,21 +49,19 @@ function App() {
     if (x > 7 || y > 7 || x < 0 || y < 0) return false
 
     for (var [dx, dy] of directions) {
-      console.log(dx, dy)
       if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) continue
       if (!board[x + dx][y + dy].hasPiece) continue
       if (board[x + dx][y + dy].pieceColor === (isPlayer1Turn ? "white" : "black")) continue
-      console.log("goingin")
-      if (traverseBoard(x + dx, y + dy, dx, dy, isPlayer1Turn)) return true
+      if (searchForMove(x + dx, y + dy, dx, dy, isPlayer1Turn)) return true
     }
     return false
   }
 
-  function traverseBoard(x, y, dx, dy, isPlayer1Turn) {
+  function searchForMove(x, y, dx, dy, isPlayer1Turn) {
     if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) return false
     if (!board[x + dx][y + dy].hasPiece) return false
     if (board[x + dx][y + dy].pieceColor === (isPlayer1Turn ? "white" : "black")) return true
-    return traverseBoard(x + dx, y + dy, dx, dy, isPlayer1Turn)
+    return searchForMove(x + dx, y + dy, dx, dy, isPlayer1Turn)
   }
 
   return (
