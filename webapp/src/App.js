@@ -4,31 +4,26 @@ import _ from "lodash"
 
 let gameBoard = Array.from({length: 8}, _=>(Array.from({length: 8}, _=>({
   hasPiece: false, 
-  hasTransparentPiece: false,
   pieceColor: "white"
 }))))
 
 gameBoard[3][3] = {
   hasPiece: true, 
-  hasTransparentPiece: false,
   pieceColor: "white"
 }
 
 gameBoard[3][4] = {
   hasPiece: true, 
-  hasTransparentPiece: false,
   pieceColor: "black"
 }
 
 gameBoard[4][4] = {
   hasPiece: true, 
-  hasTransparentPiece: false,
   pieceColor: "white"
 }
 
 gameBoard[4][3] = {
   hasPiece: true, 
-  hasTransparentPiece: false,
   pieceColor: "black"
 }
 
@@ -45,6 +40,10 @@ function App() {
       return newBoard
     })
     setIsPlayer1Turn(!isPlayer1Turn)
+  }
+
+  function canPlacePiece(isPlayer1, x, y) {
+
   }
 
   return (
