@@ -15,7 +15,7 @@ body {
 .board {
   height: 90vmin;
   width: 90vmin;
-  background-color: aqua;
+  background-color: #779556;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);

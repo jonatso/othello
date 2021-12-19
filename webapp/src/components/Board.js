@@ -2,18 +2,28 @@ import Tile from "./Tile"
 
 export default function Board(props) {
     
+    const tiles = []
+    console.log("hello")
+
+    for (let i = 0; i < props.board.length; i++) {
+        for (let j = 0; j < props.board[0].length; j++) {
+            console.log("test")
+            tiles.push(
+                <Tile 
+                    hasPiece={props.board[i][j].hasPiece}
+                    hasTransparentPiece={props.board[i][j].hasTransparentPiece}
+                    pieceColor={props.board[i][j].pieceColor}
+                    isOdd={(i + j) % 2 === 0}
+                />
+            )
+        }
+    }
+    
+    console.log(tiles)
+
     return (
         <div className="board">
-            {props.board.map(coord => {
-                return (
-                    <Tile 
-                        isOdd={((coord.x + coord.y) % 2) === 0} 
-                        hasPiece={true}
-                        pieceIsTransparent={coord.y % 2 === 0}
-                        pieceColor={coord.x % 2 === 0 ? "white" : "black"}
-                    />
-                )
-            })}
+            {tiles}
         </div>
     )
 }
