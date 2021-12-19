@@ -30,8 +30,12 @@ gameBoard[4][3] = {
 const directions = [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]
 
 function App() {
-  const [board, setBoard] = React.useState(gameBoard)
   const [isPlayer1Turn, setIsPlayer1Turn] = React.useState(true)
+  const [board, setBoard] = React.useState(gameBoard)
+  const [posibleMovesBoard, setPossibleMovesBoard] = React.useState(
+    getNewPossibleMovesBoard()
+  )
+  
 
   function placePiece(x, y) {
     if (!canPlacePiece(x, y, isPlayer1Turn)) return
@@ -42,6 +46,28 @@ function App() {
       return newBoard
     })
     setIsPlayer1Turn(!isPlayer1Turn)
+    
+    setPossibleMovesBoard(getNewPossibleMovesBoard())
+  }
+
+  function getNewPossibleMovesBoard() {
+    const newPMBoard = Array.from({length: 8}, _=>(Array.from({length: 8}, _=>({
+      hasPiece: false, 
+      pieceColor: "white"
+    }))))
+
+    for (let x = 0; x < newPMBoard.length; x++) {
+      for (let y = 0; y < newPMBoard[0].length; y++) {
+        if (canPlacePiece(x, y, isPlayer1Turn)) {
+          newPMBoard[x][y] = {
+            hasPiece: true,
+            pieceColor: (isPlayer1Turn ? "white" : "black")
+          }
+        }
+      }
+    }
+
+    return newPMBoard
   }
 
   function canPlacePiece(x, y, isPlayer1Turn) {
@@ -66,7 +92,7 @@ function App() {
 
   return (
     <div className="app">
-      <Board board={board} handleClick={placePiece}/>
+      <Board board={board} posibleMovesBoard={posibleMovesBoard} handleClick={placePiece}/>
     </div>
   );
 }

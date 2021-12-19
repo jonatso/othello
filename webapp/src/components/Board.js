@@ -10,8 +10,8 @@ export default function Board(props) {
                 <Tile
                     coord={{x: i, y: j}}
                     hasPiece={props.board[i][j].hasPiece}
-                    hasTransparentPiece={props.board[i][j].hasTransparentPiece}
-                    pieceColor={props.board[i][j].pieceColor}
+                    hasTransparentPiece={props.posibleMovesBoard[i][j].hasPiece}
+                    pieceColor={props.board[i][j].hasPiece ? props.board[i][j].pieceColor : props.posibleMovesBoard[i][j].pieceColor}
                     isOdd={(i + j) % 2 === 0}
                     handleClick={() => props.handleClick(i, j)}
                 />
