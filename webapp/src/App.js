@@ -38,19 +38,20 @@ function App() {
   
 
   function placePiece(x, y) {
-    if (!canPlacePiece(x, y, isPlayer1Turn)) return
+    if (!canPlacePiece(x, y)) return
     setBoard(oldBoard => {
       const newBoard = _.cloneDeep(oldBoard)
       newBoard[x][y].hasPiece = true
-      newBoard[x][y].pieceColor = isPlayer1Turn ? "white" : "black"
+      newBoard[x][y].pieceColor = (isPlayer1Turn ? "white" : "black")
       return newBoard
     })
     setIsPlayer1Turn(!isPlayer1Turn)
-    
+    console.log("getting there")
     setPossibleMovesBoard(getNewPossibleMovesBoard())
   }
 
   function getNewPossibleMovesBoard() {
+    console.log("we doing it")
     const newPMBoard = Array.from({length: 8}, _=>(Array.from({length: 8}, _=>({
       hasPiece: false, 
       pieceColor: "white"
@@ -58,7 +59,7 @@ function App() {
 
     for (let x = 0; x < newPMBoard.length; x++) {
       for (let y = 0; y < newPMBoard[0].length; y++) {
-        if (canPlacePiece(x, y, isPlayer1Turn)) {
+        if (canPlacePiece(x, y)) {
           newPMBoard[x][y] = {
             hasPiece: true,
             pieceColor: (isPlayer1Turn ? "white" : "black")
@@ -70,7 +71,7 @@ function App() {
     return newPMBoard
   }
 
-  function canPlacePiece(x, y, isPlayer1Turn) {
+  function canPlacePiece(x, y) {
     if (board[x][y].hasPiece) return false
     if (x > 7 || y > 7 || x < 0 || y < 0) return false
 
@@ -78,16 +79,16 @@ function App() {
       if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) continue
       if (!board[x + dx][y + dy].hasPiece) continue
       if (board[x + dx][y + dy].pieceColor === (isPlayer1Turn ? "white" : "black")) continue
-      if (searchForMove(x + dx, y + dy, dx, dy, isPlayer1Turn)) return true
+      if (searchForMove(x + dx, y + dy, dx, dy)) return true
     }
     return false
   }
 
-  function searchForMove(x, y, dx, dy, isPlayer1Turn) {
+  function searchForMove(x, y, dx, dy) {
     if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) return false
     if (!board[x + dx][y + dy].hasPiece) return false
     if (board[x + dx][y + dy].pieceColor === (isPlayer1Turn ? "white" : "black")) return true
-    return searchForMove(x + dx, y + dy, dx, dy, isPlayer1Turn)
+    return searchForMove(x + dx, y + dy, dx, dy)
   }
 
   return (
