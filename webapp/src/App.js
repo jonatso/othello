@@ -1,5 +1,6 @@
 import Board from './components/Board';
 import React from "react"
+import _ from "lodash"
 
 let gameBoard = Array.from({length: 8}, _=>(Array.from({length: 8}, _=>({
   hasPiece: false, 
@@ -34,13 +35,18 @@ gameBoard[4][3] = {
 function App() {
   const [board, setBoard] = React.useState(gameBoard)
 
-  function handleClick() {
-    
+  function placePiece(x, y) {
+    console.log("clicked", x, y)
+    setBoard(oldBoard => {
+      const newBoard = _.cloneDeep(oldBoard)
+      newBoard[x][y].hasPiece = true
+      return newBoard
+    })
   }
 
   return (
     <div className="app">
-      <Board board={board} handleClick={handleClick}/>
+      <Board board={board} handleClick={placePiece}/>
     </div>
   );
 }
