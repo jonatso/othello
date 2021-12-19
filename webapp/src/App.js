@@ -34,14 +34,17 @@ gameBoard[4][3] = {
 
 function App() {
   const [board, setBoard] = React.useState(gameBoard)
+  const [isPlayer1Turn, setIsPlayer1Turn] = React.useState(true)
 
   function placePiece(x, y) {
-    console.log("clicked", x, y)
+    if(board[x][y].hasPiece) return
     setBoard(oldBoard => {
       const newBoard = _.cloneDeep(oldBoard)
       newBoard[x][y].hasPiece = true
+      newBoard[x][y].pieceColor = isPlayer1Turn ? "white" : "black"
       return newBoard
     })
+    setIsPlayer1Turn(!isPlayer1Turn)
   }
 
   return (
