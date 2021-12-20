@@ -82,6 +82,22 @@ io.on("connection", (socket) => {
             delete gameStates[roomName];
         }
     }
+
+    function handleMakeMove(data) {
+        const roomName = socketToRoom[socket.id];
+        const gameState = gameStates[roomName];
+        if (gameState.isWhitesTurn !== socket.isPlayer1) {
+            socket.emit("moveError", "Not your turn");
+            return;
+        }
+        if (gameState.possibleMovesBoard[data.x][data.y] === "") {
+            socket.emit("moveError", "Invalid move");
+            return;
+        }
+        if (placePiece(data.x, data.y, gameState)) {
+            io.to(roomName).emit("gameStateUpdate", gameState);
+        }
+    }
 });
 
 server.listen(3001, () => {
