@@ -16,9 +16,16 @@ function App() {
     ['', '', '', '', '', '', '', ''],
     ['', '', '', '', '', '', '', '']
   ])
-  const [posibleMovesBoard, setPossibleMovesBoard] = React.useState(
-    getNewPossibleMovesBoard()
-  )
+  const [posibleMovesBoard, setPossibleMovesBoard] = React.useState([
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', 'w', '', '', ''],
+    ['', '', '', '', '', 'w', '', ''],
+    ['', '', 'w', '', '', '', '', ''],
+    ['', '', '', 'w', '', '', '', ''],
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '']
+  ])
 
   function placePiece(x, y) {
     if (!canPlacePiece(x, y)) return
@@ -29,7 +36,7 @@ function App() {
     })
     setIsPlayer1Turn(!isPlayer1Turn)
     console.log("getting there")
-    setPossibleMovesBoard(getNewPossibleMovesBoard())
+    //setPossibleMovesBoard(getNewPossibleMovesBoard())
   }
 
   function getNewPossibleMovesBoard() {
