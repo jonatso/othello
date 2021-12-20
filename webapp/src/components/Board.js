@@ -13,6 +13,7 @@ export default function Board(props) {
                     pieceColor={props.board[i][j] !== '' ? props.board[i][j] : props.posibleMovesBoard[i][j]}
                     isOdd={(i + j) % 2 === 0}
                     handleClick={() => props.handleClick(i, j)}
+                    key={`${i}-${j}`}
                 />
             )
         }

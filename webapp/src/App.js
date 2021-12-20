@@ -2,26 +2,23 @@ import Board from './components/Board';
 import React from "react"
 import _ from "lodash"
 
-let gameBoard = [
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', 'w', 'b', '', '', ''],
-  ['', '', '', 'b', 'w', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', ''],
-  ['', '', '', '', '', '', '', '']
-]
-
 const directions = [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]
 
 function App() {
   const [isPlayer1Turn, setIsPlayer1Turn] = React.useState(true)
-  const [board, setBoard] = React.useState(gameBoard)
+  const [board, setBoard] = React.useState([
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', 'w', 'b', '', '', ''],
+    ['', '', '', 'b', 'w', '', '', ''],
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', ''],
+    ['', '', '', '', '', '', '', '']
+  ])
   const [posibleMovesBoard, setPossibleMovesBoard] = React.useState(
     getNewPossibleMovesBoard()
   )
-  
 
   function placePiece(x, y) {
     if (!canPlacePiece(x, y)) return
