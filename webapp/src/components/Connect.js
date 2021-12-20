@@ -1,10 +1,23 @@
+import React from "react";
+
 export default function Connect(props) {
+  const [roomNameInputText, setRoomNameInputText] = React.useState("");
+  function handleRoomNameInput(event) {
+    setRoomNameInputText(event.target.value);
+  }
+
   return (
     <div className="connect">
-      <button>Host Game</button>
+      <button onClick={props.clickHost}>Host Game</button>
       <br></br>
-      <input type="text" />
-      <button>Join Game</button>
+      <input
+        type="text"
+        value={roomNameInputText}
+        onChange={handleRoomNameInput}
+      />
+      <button onClick={() => props.clickJoin(roomNameInputText)}>
+        Join Game
+      </button>
       <p>{props.connectText}</p>
     </div>
   );

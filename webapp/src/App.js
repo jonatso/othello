@@ -16,8 +16,11 @@ const directions = [
   [-1, -1],
 ];
 
+const socket = socketIOClient(ENDPOINT);
+
 function App() {
   const [isWhitesTurn, setisWhitesTurn] = React.useState(true);
+  const [isPlayer1, setIsPlayer1] = React.useState(true);
   const [board, setBoard] = React.useState([
     ["", "", "", "", "", "", "", ""],
     ["", "", "", "", "", "", "", ""],
@@ -46,9 +49,26 @@ function App() {
     );
   }
 
-  function clickJoin(roomName) {}
+  function clickJoin(roomName) {
+    console.log("clickJoin", roomName);
+    socket.emit("joinGame", roomName);
+  }
 
-  function clickHost() {}
+  function clickHost() {
+    console.log("clickHost");
+    socket.emit("createGame");
+  }
+
+  React.useEffect(() => {
+    socket.on("gameCode", (roomName) => {
+      setConnectText(`Hosting on ${roomName}`);
+    });
+
+    socket.on("startGame", (isPlayer1) => {
+      setIsPlayer1(isPlayer1);
+      console.log("game started");
+    });
+  }, []);
 
   return (
     <div className="app">

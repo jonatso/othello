@@ -52,9 +52,7 @@ io.on("connection", (socket) => {
 
     socket.join(roomName);
     socket.isPlayer1 = false;
-    socket.emit("initGame", false);
-
-    startGameInterval(roomName);
+    io.to(roomName).emit("startGame", false);
   }
 
   function handleCreateGame() {
@@ -66,7 +64,6 @@ io.on("connection", (socket) => {
 
     socket.join(roomName);
     socket.isPlayer1 = true;
-    socket.emit("initGame", true);
   }
 
   function handleDisconnect() {
