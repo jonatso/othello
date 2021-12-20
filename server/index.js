@@ -15,6 +15,9 @@ const io = new Server(server, {
     }
 });
 
+const socketToRoom = {};
+const gameStates = {};
+
 io.on('connection', (socket) => {
     console.log(`Connected: ${socket.id}`);
     
@@ -40,14 +43,14 @@ io.on('connection', (socket) => {
         }
     
         if (numClients === 0) {
-          client.emit('unknownCode');
+          socket.emit('unknownCode');
           return;
         } else if (numClients > 1) {
-          client.emit('tooManyPlayers');
+          socket.emit('tooManyPlayers');
           return;
         }
     
-        clientRooms[client.id] = roomName;
+        socketToRoom[socket.id] = roomName;
     
         socket.join(roomName);
         socket.number = 2;
@@ -56,16 +59,16 @@ io.on('connection', (socket) => {
         startGameInterval(roomName);
     }
 
-    function handleNewGame() {
+    function handleCreateGame() {
         let roomName = makeid(5);
-        clientRooms[client.id] = roomName;
-        client.emit('gameCode', roomName);
+        socketToRoom[socket.id] = roomName;
+        socket.emit('gameCode', roomName);
     
-        state[roomName] = initGame();
+        gameStates[roomName] = initGame();
     
-        client.join(roomName);
-        client.number = 1;
-        client.emit('init', 1);
+        socket.join(roomName);
+        socket.number = 1;
+        socket.emit('init', 1);
     }
 
     function makeid(length) {
@@ -80,9 +83,6 @@ io.on('connection', (socket) => {
 
 
 });
-
-
-
 
 server.listen(3001, () => {
    console.log("Server is running on port 3001"); 
