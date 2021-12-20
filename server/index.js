@@ -25,10 +25,6 @@ io.on('connection', (socket) => {
     socket.on('joinGame', handleJoinGame);
     socket.on('createGame', handleCreateGame);
 
-    function handleDisconnect() {
-        console.log(`Disconnected: ${socket.id}`);
-    }
-
     function handleJoinGame(roomName) {
         const room = io.sockets.adapter.rooms[roomName];
     
@@ -54,7 +50,7 @@ io.on('connection', (socket) => {
     
         socket.join(roomName);
         socket.number = 2;
-        socket.emit('init', 2);
+        socket.emit('initGame', 2);
         
         startGameInterval(roomName);
     }
@@ -68,7 +64,21 @@ io.on('connection', (socket) => {
     
         socket.join(roomName);
         socket.number = 1;
-        socket.emit('init', 1);
+        socket.emit('initGame', 1);
+    }
+
+    function handleDisconnect() {
+        const roomName = socketToRoom[socket.id];
+        delete socketToRoom[socket.id];
+        if (roomName) {
+            const room = io.sockets.adapter.rooms[roomName];
+            if (room) {
+                for (socket of room.sockets) {
+                    socket.emit('opponentLeft'); 
+                }
+            }
+            delete gameStates[roomName];
+        }
     }
 
     function makeid(length) {
@@ -79,7 +89,7 @@ io.on('connection', (socket) => {
            res += chars.charAt(Math.floor(Math.random() * charsL));
         }
         return res;
-     }
+    }
 
 
 });
