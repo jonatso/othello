@@ -8,10 +8,9 @@ export default function Board(props) {
         for (let j = 0; j < props.board[0].length; j++) {
             tiles.push(
                 <Tile
-                    coord={{x: i, y: j}}
-                    hasPiece={props.board[i][j].hasPiece}
-                    hasTransparentPiece={props.posibleMovesBoard[i][j].hasPiece}
-                    pieceColor={props.board[i][j].hasPiece ? props.board[i][j].pieceColor : props.posibleMovesBoard[i][j].pieceColor}
+                    hasPiece={props.board[i][j] !== ''}
+                    hasTransparentPiece={props.posibleMovesBoard[i][j] !== ''}
+                    pieceColor={props.board[i][j] !== '' ? props.board[i][j] : props.posibleMovesBoard[i][j]}
                     isOdd={(i + j) % 2 === 0}
                     handleClick={() => props.handleClick(i, j)}
                 />
