@@ -2,6 +2,8 @@ import Board from "./components/Board";
 import Connect from "./components/Connect";
 import React from "react";
 import _ from "lodash";
+import socketIOClient from "socket.io-client";
+const ENDPOINT = "http://127.0.0.1:3001";
 
 const directions = [
   [0, 1],
