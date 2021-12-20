@@ -5,7 +5,7 @@ const cors = require("cors");
 const { Server } = require("socket.io");
 app.use(cors());
 const server = http.createServer(app);
-import _ from "lodash";
+var _ = require("lodash");
 
 const io = new Server(server, {
     cors: {
