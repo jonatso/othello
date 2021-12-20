@@ -29,10 +29,15 @@ function App() {
 
   function placePiece(x, y) {
     console.log(`${isWhitesTurn ? 'white' : 'black'} is trying to place a piece`)
-    if (!canPlacePiece(x, y)) return
+    const flipDirections = getFlipDirections(x, y)
+    if (flipDirections.length === 0) return
     setBoard(oldBoard => {
       const newBoard = _.cloneDeep(oldBoard)
       newBoard[x][y] = (isWhitesTurn ? 'w' : 'b')
+      for (var [dx, dy] of flipDirections) {
+        flipPieces(x, y, dx, dy, newBoard)
+      }
+
       return newBoard
     })
   }
@@ -42,7 +47,7 @@ function App() {
 
     for (let x = 0; x < newPMBoard.length; x++) {
       for (let y = 0; y < newPMBoard[0].length; y++) {
-        if (canPlacePiece(x, y)) {
+        if (getFlipDirections(x, y).length !== 0) {
           newPMBoard[x][y] = (isWhitesTurn ? 'w' : 'b')
         }
       }
@@ -50,22 +55,33 @@ function App() {
     return newPMBoard
   }
 
-  function canPlacePiece(x, y) {
-    if (board[x][y] !== '') return false
-    if (x > 7 || y > 7 || x < 0 || y < 0) return false
+  function getFlipDirections(x, y) {
+    const flipDirections = []
+    if (board[x][y] !== '') return flipDirections
+    if (x > 7 || y > 7 || x < 0 || y < 0) return flipDirections
 
     for (var [dx, dy] of directions) {
       if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) continue
       if (board[x + dx][y + dy] !== (isWhitesTurn ? 'b' : 'w')) continue
-      if (searchForMove(x + dx, y + dy, dx, dy)) return true
+      if (searchForMove(x + dx, y + dy, dx, dy)) {
+        flipDirections.push([dx, dy])
+      }
     }
-    return false
+    return flipDirections
   }
 
   function searchForMove(x, y, dx, dy) {
     if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) return false
     if (board[x + dx][y + dy] === (isWhitesTurn ? 'w' : 'b')) return true
     return searchForMove(x + dx, y + dy, dx, dy)
+  }
+
+  function flipPieces(x, y, dx, dy, newBoard) {
+    while (board[x + dx][y + dy] !== (isWhitesTurn ? 'w' : 'b')) {
+      newBoard[x + dx][y + dy] = (isWhitesTurn ? 'w' : 'b')
+      x += dx
+      y += dy
+    }
   }
 
   React.useEffect(() => {
