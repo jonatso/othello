@@ -5,48 +5,50 @@ import _ from "lodash";
 import socketIOClient from "socket.io-client";
 const ENDPOINT = "http://127.0.0.1:3001";
 
-const directions = [
-  [0, 1],
-  [0, -1],
-  [1, 0],
-  [-1, 0],
-  [1, 1],
-  [1, -1],
-  [-1, 1],
-  [-1, -1],
-];
-
 const socket = socketIOClient(ENDPOINT);
 
-function App() {
-  const [isWhitesTurn, setisWhitesTurn] = React.useState(true);
+export default function App() {
   const [isPlayer1, setIsPlayer1] = React.useState(true);
-  const [board, setBoard] = React.useState([
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-  ]);
-  const [posibleMovesBoard, setPossibleMovesBoard] = React.useState([
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-    ["", "", "", "", "", "", "", ""],
-  ]);
+  const [gameState, setGameState] = React.useState({
+    board: [
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+    ],
+    possibleMovesBoard: [
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+      ["", "", "", "", "", "", "", ""],
+    ],
+    isWhitesTurn: true,
+  });
+
   const [connectText, setConnectText] = React.useState("...");
 
   function placePiece(x, y) {
-    console.log(
-      `${isWhitesTurn ? "white" : "black"} is trying to place a piece`
-    );
+    if (!isMyTurn()) {
+      console.log("not my turn :(");
+      return;
+    }
+    if (gameState.possibleMovesBoard[x][y] === "") {
+      console.log("not a possible move...");
+      return;
+    }
+    socket.emit("makeMove", { x, y });
+  }
+
+  function isMyTurn() {
+    return gameState.isWhitesTurn === isPlayer1;
   }
 
   function clickJoin(roomName) {
@@ -64,8 +66,17 @@ function App() {
       setConnectText(`Hosting on ${roomName}`);
     });
 
-    socket.on("startGame", (isPlayer1) => {
+    socket.on("gameStateUpdate", (gameState) => {
+      setGameState(gameState);
+    });
+
+    socket.on("isPlayer1", (isPlayer1) => {
       setIsPlayer1(isPlayer1);
+    });
+
+    socket.on("startGame", (gameState) => {
+      console.log(gameState);
+      setGameState(gameState);
       console.log("game started");
     });
   }, []);
@@ -73,8 +84,8 @@ function App() {
   return (
     <div className="app">
       <Board
-        board={board}
-        posibleMovesBoard={posibleMovesBoard}
+        board={gameState.board}
+        posibleMovesBoard={gameState.possibleMovesBoard}
         handleClick={placePiece}
       />
       <Connect
@@ -85,5 +96,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

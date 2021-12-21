@@ -6,6 +6,16 @@ const { Server } = require("socket.io");
 app.use(cors());
 const server = http.createServer(app);
 var _ = require("lodash");
+const directions = [
+  [0, 1],
+  [0, -1],
+  [1, 0],
+  [-1, 0],
+  [1, 1],
+  [1, -1],
+  [-1, 1],
+  [-1, -1],
+];
 
 const io = new Server(server, {
   cors: {
@@ -28,22 +38,20 @@ io.on("connection", (socket) => {
   socket.on("makeMove", handleMakeMove);
 
   function handleJoinGame(roomName) {
-    const room = io.sockets.adapter.rooms[roomName];
-
-    let allUsers;
-    if (room) {
-      allUsers = room.sockets;
-    }
+    console.log(`${socket.id} is trying to join ${roomName}`);
+    const room = io.sockets.adapter.rooms.get(roomName);
 
     let numClients = 0;
-    if (allUsers) {
-      numClients = Object.keys(allUsers).length;
+    if (room) {
+      numClients = room.size;
     }
 
     if (numClients === 0) {
+      console.log("No one in room");
       socket.emit("badCode", "No players in room");
       return;
     } else if (numClients > 1) {
+      console.log("Too many people in room");
       socket.emit("badCode", "Room is full");
       return;
     }
@@ -52,29 +60,34 @@ io.on("connection", (socket) => {
 
     socket.join(roomName);
     socket.isPlayer1 = false;
-    io.to(roomName).emit("startGame", false);
+    socket.emit("isPlayer1", false);
+    io.in(roomName).emit("startGame", gameStates[roomName]);
   }
 
   function handleCreateGame() {
     let roomName = makeid(5);
     socketToRoom[socket.id] = roomName;
     socket.emit("gameCode", roomName);
+    socket.emit("isPlayer1", true);
 
     gameStates[roomName] = createGameState();
 
     socket.join(roomName);
     socket.isPlayer1 = true;
+    console.log(`${socket.id} created ${roomName}`);
   }
 
   function handleDisconnect() {
+    console.log(`${socket.id} disconnected`);
     const roomName = socketToRoom[socket.id];
     delete socketToRoom[socket.id];
     if (roomName) {
-      const room = io.sockets.adapter.rooms[roomName];
+      const room = io.sockets.adapter.rooms.get(roomName);
       if (room) {
-        for (socket of room.sockets) {
-          socket.emit("opponentLeft");
-        }
+        room.forEach((socketId) => {
+          io.sockets.sockets.get(socketId).emit("opponentLeft");
+        });
+        io.sockets.adapter.rooms.delete(roomName);
       }
       delete gameStates[roomName];
     }
@@ -103,8 +116,7 @@ server.listen(3001, () => {
 
 function makeid(length) {
   var res = "";
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   const charsL = chars.length;
   for (var i = 0; i < length; i++) {
     res += chars.charAt(Math.floor(Math.random() * charsL));
@@ -142,7 +154,7 @@ function placePiece(x, y, gameState) {
   //console.log(`${isWhitesTurn ? 'white' : 'black'} is trying to place a piece`)
   const flipDirections = getFlipDirections(x, y, gameState);
   if (flipDirections.length === 0) return false;
-  const newBoard = _.cloneDeep(oldBoard);
+  const newBoard = _.cloneDeep(gameState.board);
   newBoard[x][y] = gameState.isWhitesTurn ? "w" : "b";
   for (var [dx, dy] of flipDirections) {
     flipPieces(x, y, dx, dy, newBoard, gameState);
@@ -186,7 +198,10 @@ function getFlipDirections(x, y, gameState) {
 
   for (var [dx, dy] of directions) {
     if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) continue;
-    if (board[x + dx][y + dy] !== (isWhitesTurn ? "b" : "w")) continue;
+    if (
+      gameState.board[x + dx][y + dy] !== (gameState.isWhitesTurn ? "b" : "w")
+    )
+      continue;
     if (searchForMove(x + dx, y + dy, dx, dy, gameState)) {
       flipDirections.push([dx, dy]);
     }
@@ -196,12 +211,15 @@ function getFlipDirections(x, y, gameState) {
 
 function searchForMove(x, y, dx, dy, gameState) {
   if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) return false;
-  if (board[x + dx][y + dy] === (isWhitesTurn ? "w" : "b")) return true;
+  if (gameState.board[x + dx][y + dy] === (gameState.isWhitesTurn ? "w" : "b"))
+    return true;
   return searchForMove(x + dx, y + dy, dx, dy, gameState);
 }
 
 function flipPieces(x, y, dx, dy, newBoard, gameState) {
-  while (board[x + dx][y + dy] !== (gameState.isWhitesTurn ? "w" : "b")) {
+  while (
+    gameState.board[x + dx][y + dy] !== (gameState.isWhitesTurn ? "w" : "b")
+  ) {
     newBoard[x + dx][y + dy] = gameState.isWhitesTurn ? "w" : "b";
     x += dx;
     y += dy;
