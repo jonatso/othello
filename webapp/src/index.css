@@ -55,6 +55,7 @@ body {
 
 .piece--t {
   opacity: 0.25;
+  cursor: pointer;
 }
 
 .connect,
