@@ -29,7 +29,10 @@ export default function ConnctionModal(props) {
       />
       <button
         disabled={roomNameInputText.length < 4}
-        onClick={() => props.clickJoin(roomNameInputText)}
+        onClick={() => {
+          props.clickJoin(roomNameInputText);
+          setRoomNameInputText("");
+        }}
       >
         Join game
       </button>
