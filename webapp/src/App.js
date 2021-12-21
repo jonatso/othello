@@ -2,7 +2,7 @@ import Board from "./components/Board";
 import Connect from "./components/Connect";
 import React from "react";
 import GameInfo from "./components/GameInfo";
-import _ from "lodash";
+import ConnectionModal from "./components/ConnectionModal";
 import socketIOClient from "socket.io-client";
 const ENDPOINT = "http://127.0.0.1:3001";
 
@@ -52,6 +52,13 @@ export default function App() {
   function clickHost() {
     console.log("clickHost");
     socket.emit("createGame");
+    closeModal();
+  }
+
+  function clickLeave() {
+    console.log("clickLeave");
+    socket.emit("leaveGame");
+    setIsOpen(true);
   }
 
   React.useEffect(() => {
@@ -65,6 +72,7 @@ export default function App() {
 
     socket.on("isPlayer1", (isPlayer1) => {
       setIsPlayer1(isPlayer1);
+      closeModal();
     });
 
     socket.on("startGame", (gameState) => {
@@ -75,7 +83,7 @@ export default function App() {
     });
 
     socket.on("opponentLeft", () => {
-      setConnectText("Opponent left, please make new room");
+      setConnectText("Please make new room");
       setGameState({
         board: emptyBoard,
         possibleMovesBoard: emptyBoard,
@@ -90,20 +98,37 @@ export default function App() {
     });
   }, []);
 
+  const [modalIsOpen, setIsOpen] = React.useState(true);
+
+  function openModal() {
+    setIsOpen(true);
+  }
+
+  function closeModal() {
+    setIsOpen(false);
+  }
+
   return (
     <div className="app">
+      <ConnectionModal
+        isOpen={modalIsOpen}
+        close={closeModal}
+        clickJoin={clickJoin}
+        clickHost={clickHost}
+      >
+        <h2>Welcome to Othello!</h2>
+      </ConnectionModal>
+      <Connect
+        clickLeave={clickLeave}
+        gameHasStarted={gameHasStarted}
+        connectText={connectText}
+      />
       <Board
         board={gameState.board}
         posibleMovesBoard={
           isMyTurn() ? gameState.possibleMovesBoard : emptyBoard
         }
         handleClick={placePiece}
-      />
-      <Connect
-        clickJoin={clickJoin}
-        clickHost={clickHost}
-        gameHasStarted={gameHasStarted}
-        connectText={connectText}
       />
       <GameInfo
         board={gameState.board}

@@ -33,6 +33,7 @@ io.on("connection", (socket) => {
   console.log(`Connected: ${socket.id}`);
 
   socket.on("disconnect", handleDisconnect);
+  socket.on("leaveGame", handleDisconnect); //clicking leave game does the same as closing the tab
   socket.on("joinGame", handleJoinGame);
   socket.on("createGame", handleCreateGame);
   socket.on("makeMove", handleMakeMove);
