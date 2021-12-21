@@ -11,9 +11,10 @@ export default function GameInfo(props) {
 
   return (
     <div className="game-info">
-      <p>{`White Pieces: ${numWhite}`}</p>
-      <p>{`Black Pieces: ${numBlack}`}</p>
-      {<p>{`It's ${props.isMyTurn ? "your" : "their"} turn`}</p>}
+      <p>{`⚪: ${numWhite} ⚫: ${numBlack}`}</p>
+      {props.gameHasStarted && (
+        <p>{`It's ${props.isMyTurn ? "your" : "their"} turn`}</p>
+      )}
     </div>
   );
 }

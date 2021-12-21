@@ -97,11 +97,11 @@ io.on("connection", (socket) => {
     const roomName = socketToRoom[socket.id];
     const gameState = gameStates[roomName];
     if (gameState.isWhitesTurn !== socket.isPlayer1) {
-      socket.emit("moveError", "Not your turn");
+      socket.emit("moveError", "...it's not your turn");
       return;
     }
     if (gameState.possibleMovesBoard[data.x][data.y] === "") {
-      socket.emit("moveError", "Invalid move");
+      socket.emit("moveError", "...invalid move");
       return;
     }
     if (placePiece(data.x, data.y, gameState)) {

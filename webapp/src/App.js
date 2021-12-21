@@ -25,7 +25,7 @@ export default function App() {
     possibleMovesBoard: emptyBoard,
     isWhitesTurn: true,
   });
-
+  const [gameHasStarted, setGameHasStarted] = React.useState(false);
   const [connectText, setConnectText] = React.useState("...");
 
   function placePiece(x, y) {
@@ -70,6 +70,7 @@ export default function App() {
     socket.on("startGame", (gameState) => {
       console.log(gameState);
       setGameState(gameState);
+      setGameHasStarted(true);
       setConnectText("Game started!");
     });
 
@@ -81,6 +82,11 @@ export default function App() {
         isWhitesTurn: true,
       });
       setIsPlayer1(null);
+      setGameHasStarted(false);
+    });
+
+    socket.on("moveError", (message) => {
+      console.log(message);
     });
   }, []);
 
@@ -96,9 +102,14 @@ export default function App() {
       <Connect
         clickJoin={clickJoin}
         clickHost={clickHost}
+        gameHasStarted={gameHasStarted}
         connectText={connectText}
       />
-      <GameInfo board={gameState.board} isMyTurn={isMyTurn()} />
+      <GameInfo
+        board={gameState.board}
+        isMyTurn={isMyTurn()}
+        gameHasStarted={gameHasStarted}
+      />
     </div>
   );
 }

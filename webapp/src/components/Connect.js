@@ -8,16 +8,20 @@ export default function Connect(props) {
 
   return (
     <div className="connect">
-      <button onClick={props.clickHost}>Host Game</button>
-      <br></br>
-      <input
-        type="text"
-        value={roomNameInputText}
-        onChange={handleRoomNameInput}
-      />
-      <button onClick={() => props.clickJoin(roomNameInputText)}>
-        Join Game
-      </button>
+      {!props.gameHasStarted && (
+        <div>
+          <button onClick={props.clickHost}>Host Game</button>
+          <br></br>
+          <input
+            type="text"
+            value={roomNameInputText}
+            onChange={handleRoomNameInput}
+          />
+          <button onClick={() => props.clickJoin(roomNameInputText)}>
+            Join Game
+          </button>
+        </div>
+      )}
       <p>{props.connectText}</p>
     </div>
   );
