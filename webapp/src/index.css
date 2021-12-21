@@ -55,6 +55,10 @@ body {
 
 .piece--t {
   opacity: 0.25;
+}
+
+.piece--t:hover {
+  opacity: 0.4;
   cursor: pointer;
 }
 
