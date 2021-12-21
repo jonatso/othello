@@ -27,6 +27,7 @@ export default function App() {
   });
   const [gameHasStarted, setGameHasStarted] = React.useState(false);
   const [connectText, setConnectText] = React.useState("...");
+  const [joinRoomError, setJoinRoomError] = React.useState("");
 
   function placePiece(x, y) {
     if (!isMyTurn()) {
@@ -47,12 +48,14 @@ export default function App() {
   function clickJoin(roomName) {
     console.log("clickJoin", roomName);
     socket.emit("joinGame", roomName);
+    setJoinRoomError("");
   }
 
   function clickHost() {
     console.log("clickHost");
     socket.emit("createGame");
     closeModal();
+    setJoinRoomError("");
   }
 
   function clickLeave() {
@@ -83,7 +86,7 @@ export default function App() {
     });
 
     socket.on("opponentLeft", () => {
-      setConnectText("Please make new room");
+      setConnectText("Your opponent left the game");
       setGameState({
         board: emptyBoard,
         possibleMovesBoard: emptyBoard,
@@ -95,6 +98,11 @@ export default function App() {
 
     socket.on("moveError", (message) => {
       console.log(message);
+    });
+
+    socket.on("badCode", (msg) => {
+      setJoinRoomError(msg);
+      console.log(msg);
     });
   }, []);
 
@@ -115,6 +123,7 @@ export default function App() {
         close={closeModal}
         clickJoin={clickJoin}
         clickHost={clickHost}
+        joinRoomError={joinRoomError}
       >
         <h2>Welcome to Othello!</h2>
       </ConnectionModal>

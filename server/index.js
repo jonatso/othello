@@ -48,11 +48,11 @@ io.on("connection", (socket) => {
     }
 
     if (numClients === 0) {
-      console.log("No one in room");
+      console.log("Incorrect code");
       socket.emit("badCode", "No players in room");
       return;
     } else if (numClients > 1) {
-      console.log("Too many people in room");
+      console.log("The game is full");
       socket.emit("badCode", "Room is full");
       return;
     }

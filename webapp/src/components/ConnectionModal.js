@@ -36,6 +36,7 @@ export default function ConnctionModal(props) {
       >
         Join game
       </button>
+      <p>{props.joinRoomError}</p>
     </Modal>
   );
 }
