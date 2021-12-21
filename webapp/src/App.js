@@ -1,6 +1,7 @@
 import Board from "./components/Board";
 import Connect from "./components/Connect";
 import React from "react";
+import GameInfo from "./components/GameInfo";
 import _ from "lodash";
 import socketIOClient from "socket.io-client";
 const ENDPOINT = "http://127.0.0.1:3001";
@@ -69,16 +70,19 @@ export default function App() {
     socket.on("startGame", (gameState) => {
       console.log(gameState);
       setGameState(gameState);
-      console.log("game started");
+      setConnectText("Game started!");
+    });
+
+    socket.on("opponentLeft", () => {
+      setConnectText("Opponent left, please make new room");
+      setGameState({
+        board: emptyBoard,
+        possibleMovesBoard: emptyBoard,
+        isWhitesTurn: true,
+      });
+      setIsPlayer1(null);
     });
   }, []);
-
-  React.useEffect(() => {
-    if (isPlayer1 === null) {
-      return;
-    }
-    setConnectText(`It's ${isMyTurn() ? "your" : "their"} turn`);
-  }, [gameState]);
 
   return (
     <div className="app">
@@ -94,6 +98,7 @@ export default function App() {
         clickHost={clickHost}
         connectText={connectText}
       />
+      <GameInfo board={gameState.board} isMyTurn={isMyTurn()} />
     </div>
   );
 }

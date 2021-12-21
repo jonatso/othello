@@ -63,9 +63,16 @@ body {
   margin: 40px;
 }
 
+.game-info {
+  position: fixed;
+  left: 0;
+  top: 0;
+  margin: 40px;
+}
+
 p {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: #ebecd0;
   text-align: center;
 }
