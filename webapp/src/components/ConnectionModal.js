@@ -24,7 +24,7 @@ export default function ConnctionModal(props) {
       <input
         type="text"
         value={roomNameInputText}
-        placeholder="room code"
+        placeholder="enter room code"
         onChange={handleRoomNameInput}
       />
       <button

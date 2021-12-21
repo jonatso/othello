@@ -118,23 +118,29 @@ export default function App() {
       >
         <h2>Welcome to Othello!</h2>
       </ConnectionModal>
-      <Connect
-        clickLeave={clickLeave}
-        gameHasStarted={gameHasStarted}
-        connectText={connectText}
-      />
-      <Board
-        board={gameState.board}
-        posibleMovesBoard={
-          isMyTurn() ? gameState.possibleMovesBoard : emptyBoard
-        }
-        handleClick={placePiece}
-      />
-      <GameInfo
-        board={gameState.board}
-        isMyTurn={isMyTurn()}
-        gameHasStarted={gameHasStarted}
-      />
+      {!modalIsOpen && (
+        <Connect
+          clickLeave={clickLeave}
+          gameHasStarted={gameHasStarted}
+          connectText={connectText}
+        />
+      )}
+      {!modalIsOpen && (
+        <Board
+          board={gameState.board}
+          posibleMovesBoard={
+            isMyTurn() ? gameState.possibleMovesBoard : emptyBoard
+          }
+          handleClick={placePiece}
+        />
+      )}
+      {!modalIsOpen && (
+        <GameInfo
+          board={gameState.board}
+          isMyTurn={isMyTurn()}
+          gameHasStarted={gameHasStarted}
+        />
+      )}
     </div>
   );
 }
