@@ -18,7 +18,7 @@ const emptyBoard = [
 ];
 
 export default function App() {
-  const [isPlayer1, setIsPlayer1] = React.useState(true);
+  const [isPlayer1, setIsPlayer1] = React.useState(null);
   const [gameState, setGameState] = React.useState({
     board: emptyBoard,
     possibleMovesBoard: emptyBoard,
@@ -74,6 +74,9 @@ export default function App() {
   }, []);
 
   React.useEffect(() => {
+    if (isPlayer1 === null) {
+      return;
+    }
     setConnectText(`It's ${isMyTurn() ? "your" : "their"} turn`);
   }, [gameState]);
 
