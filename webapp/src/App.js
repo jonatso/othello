@@ -6,30 +6,22 @@ import socketIOClient from "socket.io-client";
 const ENDPOINT = "http://127.0.0.1:3001";
 
 const socket = socketIOClient(ENDPOINT);
+const emptyBoard = [
+  ["", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", ""],
+  ["", "", "", "", "", "", "", ""],
+];
 
 export default function App() {
   const [isPlayer1, setIsPlayer1] = React.useState(true);
   const [gameState, setGameState] = React.useState({
-    board: [
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-    ],
-    possibleMovesBoard: [
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-      ["", "", "", "", "", "", "", ""],
-    ],
+    board: emptyBoard,
+    possibleMovesBoard: emptyBoard,
     isWhitesTurn: true,
   });
 
@@ -81,11 +73,17 @@ export default function App() {
     });
   }, []);
 
+  React.useEffect(() => {
+    setConnectText(`It's ${isMyTurn() ? "your" : "their"} turn`);
+  }, [gameState]);
+
   return (
     <div className="app">
       <Board
         board={gameState.board}
-        posibleMovesBoard={gameState.possibleMovesBoard}
+        posibleMovesBoard={
+          isMyTurn() ? gameState.possibleMovesBoard : emptyBoard
+        }
         handleClick={placePiece}
       />
       <Connect
