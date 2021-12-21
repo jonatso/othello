@@ -1,4 +1,3 @@
-import Modal from "react-modal";
 import React from "react";
 
 const customStyles = {
@@ -12,13 +11,7 @@ export default function ConnctionModal(props) {
   }
 
   return (
-    <Modal
-      isOpen={props.isOpen}
-      onAfterOpen={props.afterOpenModal}
-      style={customStyles}
-      className="modal"
-      overlayClassName="modal-overlay"
-    >
+    <div className="modal">
       <h2>Welcome to Othello!</h2>
       <button onClick={props.clickHost}>Host game</button>
       <input
@@ -37,6 +30,6 @@ export default function ConnctionModal(props) {
         Join game
       </button>
       <p>{props.joinRoomError}</p>
-    </Modal>
+    </div>
   );
 }

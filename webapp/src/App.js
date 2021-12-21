@@ -118,15 +118,16 @@ export default function App() {
 
   return (
     <div className="app">
-      <ConnectionModal
-        isOpen={modalIsOpen}
-        close={closeModal}
-        clickJoin={clickJoin}
-        clickHost={clickHost}
-        joinRoomError={joinRoomError}
-      >
-        <h2>Welcome to Othello!</h2>
-      </ConnectionModal>
+      {modalIsOpen && (
+        <ConnectionModal
+          close={closeModal}
+          clickJoin={clickJoin}
+          clickHost={clickHost}
+          joinRoomError={joinRoomError}
+        >
+          <h2>Welcome to Othello!</h2>
+        </ConnectionModal>
+      )}
       {!modalIsOpen && (
         <Connect
           clickLeave={clickLeave}
