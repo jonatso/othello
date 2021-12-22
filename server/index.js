@@ -106,6 +106,14 @@ io.on("connection", (socket) => {
       return;
     }
     if (placePiece(data.x, data.y, gameState)) {
+      if (needToSwitchTurns(gameState)) {
+        gameState.isWhitesTurn = !gameState.isWhitesTurn;
+        gameState.possibleMovesBoard = getNewPossibleMovesBoard(gameState);
+        if (needToSwitchTurns(gameState)) {
+          io.in(roomName).emit("gameEnded", gameState);
+          return;
+        }
+      }
       io.to(roomName).emit("gameStateUpdate", gameState);
     }
   }
@@ -149,6 +157,14 @@ function createGameState() {
     ],
     isWhitesTurn: true,
   };
+}
+
+function needToSwitchTurns(gameState) {
+  return (
+    gameState.possibleMovesBoard
+      .map((row) => row.filter((p) => p === "").length)
+      .reduce((a, b) => a + b, 0) === 0
+  );
 }
 
 function placePiece(x, y, gameState) {
