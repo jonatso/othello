@@ -26,6 +26,7 @@ export default function App() {
     isWhitesTurn: true,
   });
   const [gameHasStarted, setGameHasStarted] = React.useState(false);
+  const [gameIsEnded, setGameIsEnded] = React.useState(false);
   const [connectText, setConnectText] = React.useState("...");
   const [joinRoomError, setJoinRoomError] = React.useState("");
 
@@ -79,7 +80,6 @@ export default function App() {
     });
 
     socket.on("startGame", (gameState) => {
-      console.log(gameState);
       setGameState(gameState);
       setGameHasStarted(true);
       setConnectText("Game started!");
@@ -104,6 +104,12 @@ export default function App() {
       setJoinRoomError(msg);
       console.log(msg);
     });
+
+    socket.on("gameEnded", (gameState) => {
+      setGameState(gameState);
+      setGameIsEnded(true);
+      setConnectText(getWinnerText());
+    });
   }, []);
 
   const [modalIsOpen, setIsOpen] = React.useState(true);
@@ -114,6 +120,24 @@ export default function App() {
 
   function closeModal() {
     setIsOpen(false);
+  }
+
+  const numWhitePieces = gameState.board
+    .map((row) => row.filter((p) => p === "w").length)
+    .reduce((a, b) => a + b, 0);
+
+  const numBlackPieces = gameState.board
+    .map((row) => row.filter((p) => p === "b").length)
+    .reduce((a, b) => a + b, 0);
+
+  function getWinnerText() {
+    if (numWhitePieces === numBlackPieces) {
+      return "It's a tie!";
+    }
+    if (numWhitePieces > numBlackPieces) {
+      return "White wins!";
+    }
+    return "Black wins!";
   }
 
   return (
@@ -146,9 +170,10 @@ export default function App() {
       )}
       {!modalIsOpen && (
         <GameInfo
-          board={gameState.board}
           isMyTurn={isMyTurn()}
-          gameHasStarted={gameHasStarted}
+          gameIsOngoing={gameHasStarted && !gameIsEnded}
+          numWhitePieces={numWhitePieces}
+          numBlackPieces={numBlackPieces}
         />
       )}
     </div>
