@@ -4,6 +4,8 @@ const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
 app.use(cors());
+app.use(express.static(path.resolve(__dirname, "../webapp/build")));
+
 const server = http.createServer(app);
 var _ = require("lodash");
 const directions = [
@@ -119,7 +121,7 @@ io.on("connection", (socket) => {
   }
 });
 
-server.listen(3001, () => {
+server.listen(process.env.PORT || 3001, () => {
   console.log("Server is running on port 3001");
 });
 
