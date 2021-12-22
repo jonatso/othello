@@ -4,7 +4,7 @@ const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
 app.use(cors());
-app.use(express.static("client/build")));
+app.use(express.static("client/build"));
 
 const server = http.createServer(app);
 var _ = require("lodash");
