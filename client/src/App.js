@@ -4,10 +4,18 @@ import React from "react";
 import GameInfo from "./components/GameInfo";
 import ConnectionModal from "./components/ConnectionModal";
 import socketIOClient from "socket.io-client";
-const ENDPOINT = "http://localhost";
+const ENDPOINT = "http://localhost:3001";
+var socket;
 
-const socket = socketIOClient();
-//const socket = socketIOClient(ENDPOINT);
+if (!process.env.NODE_ENV || process.env.NODE_ENV === "development") {
+  //for testing without express launch
+  socket = socketIOClient(ENDPOINT);
+  console.log("dev");
+} else {
+  //socket io finds port automatically if launched with express
+  socket = socketIOClient();
+  console.log("prod");
+}
 
 const emptyBoard = [
   ["", "", "", "", "", "", "", ""],
