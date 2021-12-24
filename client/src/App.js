@@ -6,7 +6,9 @@ import ConnectionModal from "./components/ConnectionModal";
 import socketIOClient from "socket.io-client";
 const ENDPOINT = "http://localhost";
 
-const socket = socketIOClient(ENDPOINT);
+const socket = socketIOClient();
+//const socket = socketIOClient(ENDPOINT);
+
 const emptyBoard = [
   ["", "", "", "", "", "", "", ""],
   ["", "", "", "", "", "", "", ""],

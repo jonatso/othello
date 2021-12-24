@@ -21,7 +21,7 @@ const directions = [
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE"],
     preflightContinue: false,
     optionsSuccessStatus: 204,
