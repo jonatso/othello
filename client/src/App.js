@@ -1,7 +1,7 @@
 import Board from "./components/Board";
-import Connect from "./components/Connect";
+import TopInfo from "./components/TopInfo";
 import React from "react";
-import GameInfo from "./components/GameInfo";
+import BottomInfo from "./components/BottomInfo";
 import ConnectionModal from "./components/ConnectionModal";
 import socketIOClient from "socket.io-client";
 const ENDPOINT = "http://localhost:3001";
@@ -163,7 +163,7 @@ export default function App() {
         </ConnectionModal>
       )}
       {!modalIsOpen && (
-        <Connect
+        <TopInfo
           clickLeave={clickLeave}
           gameHasStarted={gameHasStarted}
           connectText={connectText}
@@ -179,7 +179,7 @@ export default function App() {
         />
       )}
       {!modalIsOpen && (
-        <GameInfo
+        <BottomInfo
           isMyTurn={isMyTurn()}
           gameIsOngoing={gameHasStarted && !gameIsEnded}
           numWhitePieces={numWhitePieces}
