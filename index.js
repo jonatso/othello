@@ -164,7 +164,7 @@ function createGameState() {
 function needToSwitchTurns(gameState) {
   return (
     gameState.possibleMovesBoard
-      .map((row) => row.filter((p) => p === "").length)
+      .map((row) => row.filter((p) => p !== "").length)
       .reduce((a, b) => a + b, 0) === 0
   );
 }
