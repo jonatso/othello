@@ -103,6 +103,7 @@ function searchForMove(
 ): boolean {
   if (x + dx > 7 || y + dy > 7 || x + dx < 0 || y + dy < 0) return false;
   if (gameState.board[x + dx][y + dy] === (gameState.isWhitesTurn ? "w" : "b")) return true;
+  if (gameState.board[x + dx][y + dy] === "") return false;
   return searchForMove(x + dx, y + dy, dx, dy, gameState);
 }
 
