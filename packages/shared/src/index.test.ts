@@ -1,9 +1,12 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  applyMove,
   createGameState,
+  getFlipsForMove,
   getFlipDirections,
   getNewPossibleMovesBoard,
+  getValidMoves,
   needToSwitchTurns,
   placePiece,
   type Board,
@@ -67,9 +70,31 @@ describe("game rules", () => {
 
     assert.equal(needToSwitchTurns(gameState), false);
 
-    gameState.possibleMovesBoard = emptyBoard();
+    assert.equal(needToSwitchTurns(gameStateFromBoard(emptyBoard())), true);
+  });
 
-    assert.equal(needToSwitchTurns(gameState), true);
+  it("gets valid opening moves from the board and current player", () => {
+    assert.deepEqual(getValidMoves(createGameState().board, "w"), [
+      { row: 2, col: 3 },
+      { row: 3, col: 2 },
+      { row: 4, col: 5 },
+      { row: 5, col: 4 },
+    ]);
+  });
+
+  it("applies a move without mutating the previous game state", () => {
+    const gameState = createGameState();
+    const originalBoard = structuredClone(gameState.board);
+    const result = applyMove(gameState, { row: 2, col: 3 });
+
+    assert.equal(result.ok, true);
+    assert.deepEqual(gameState.board, originalBoard);
+
+    if (!result.ok) return;
+
+    assert.equal(result.gameState.board[2][3], "w");
+    assert.equal(result.gameState.board[3][3], "w");
+    assert.equal(result.gameState.isWhitesTurn, false);
   });
 
   it("does not mark a horizontal move as legal through an empty gap", () => {
@@ -78,6 +103,7 @@ describe("game rules", () => {
     board[3][5] = "w";
     const gameState = gameStateFromBoard(board);
 
+    assert.deepEqual(getFlipsForMove(board, "w", { row: 3, col: 2 }), []);
     assert.deepEqual(getFlipDirections(3, 2, gameState), []);
     assert.equal(getNewPossibleMovesBoard(gameState)[3][2], "");
   });

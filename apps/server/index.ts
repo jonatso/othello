@@ -4,13 +4,7 @@ import { Server, Socket } from "socket.io";
 import express from "express";
 import { createServer } from "http";
 import cors from "cors";
-import {
-  createGameState,
-  getNewPossibleMovesBoard,
-  needToSwitchTurns,
-  placePiece,
-  type GameState,
-} from "@othello/shared";
+import { applyMove, createGameState, type GameState } from "@othello/shared";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -107,21 +101,21 @@ io.on("connection", (socket) => {
       socket.emit("moveError", "...it's not your turn");
       return;
     }
-    if (gameState.possibleMovesBoard[data.x][data.y] === "") {
+    const result = applyMove(gameState, { row: data.x, col: data.y });
+
+    if (!result.ok) {
       socket.emit("moveError", "...invalid move");
       return;
     }
-    if (placePiece(data.x, data.y, gameState)) {
-      if (needToSwitchTurns(gameState)) {
-        gameState.isWhitesTurn = !gameState.isWhitesTurn;
-        gameState.possibleMovesBoard = getNewPossibleMovesBoard(gameState);
-        if (needToSwitchTurns(gameState)) {
-          io.in(roomName).emit("gameEnded", gameState);
-          return;
-        }
-      }
-      io.to(roomName).emit("gameStateUpdate", gameState);
+
+    gameStates.set(roomName, result.gameState);
+
+    if (result.gameEnded) {
+      io.in(roomName).emit("gameEnded", result.gameState);
+      return;
     }
+
+    io.to(roomName).emit("gameStateUpdate", result.gameState);
   }
 });
 
