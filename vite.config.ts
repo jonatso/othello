@@ -1,15 +1,7 @@
-import { defineConfig } from "vite-plus";
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  lint: {
-    rules: {
-      "no-var": "error",
-      "prefer-const": "error",
-      "no-unused-vars": "warn",
-    },
-  },
-  fmt: {
-    indentWidth: 3,
-    lineWidth: 100,
-  },
+  plugins: [react(), tailwindcss()],
 });

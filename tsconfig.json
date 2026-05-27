@@ -11,10 +11,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true,
-    "paths": {
-      "@othello/shared": ["../../packages/shared/src"]
-    }
+    "allowImportingTsExtensions": true
   },
   "include": ["src"]
 }

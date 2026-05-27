@@ -1,7 +1,8 @@
 node_modules
 dist
+target
+src-tauri/target
+src-tauri/gen
 .env
 .env.local
 pnpm-lock.yaml
-infra/main.json
-.azure-deploy

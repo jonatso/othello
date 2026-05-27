@@ -3,16 +3,31 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "echo 'Run pnpm dev:server and pnpm dev:client in separate terminals'",
-    "dev:server": "vp run --filter @othello/server dev",
-    "dev:client": "vp run --filter @othello/client dev",
-    "build": "pnpm --filter @othello/shared build && pnpm --filter @othello/client build && pnpm --filter @othello/server build",
-    "check": "vp check",
-    "fmt": "vp fmt",
-    "test": "pnpm --filter @othello/shared test"
+    "dev": "tauri dev",
+    "dev:ui": "vite",
+    "build": "tauri build",
+    "build:ui": "tsc && vite build",
+    "preview": "vite preview",
+    "check": "pnpm build:ui && cargo test --manifest-path src-tauri/Cargo.toml",
+    "fmt": "cargo fmt --manifest-path src-tauri/Cargo.toml",
+    "test": "cargo test --manifest-path src-tauri/Cargo.toml"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "@tauri-apps/api": "^2.11.0",
+    "@tauri-apps/plugin-deep-link": "^2.4.9",
+    "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.3.0"
   },
   "devDependencies": {
-    "vite-plus": "^0.1.0"
+    "@tauri-apps/cli": "^2.11.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.4.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0"
   },
   "packageManager": "pnpm@11.3.0"
 }

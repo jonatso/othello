@@ -356,8 +356,18 @@ input:focus {
   background: rgba(255, 255, 255, 0.09);
 }
 
+.primary-action:disabled,
 .secondary-action:disabled {
   cursor: not-allowed;
+  transform: none;
+}
+
+.primary-action:disabled {
+  color: rgba(16, 32, 22, 0.62);
+  background: rgba(201, 237, 189, 0.62);
+}
+
+.secondary-action:disabled {
   color: rgba(248, 250, 247, 0.38);
 }
 

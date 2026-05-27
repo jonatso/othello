@@ -1,9 +1,0 @@
-node_modules
-dist
-apps/*/dist
-packages/*/dist
-.azure-deploy
-.git
-.env
-.env.local
-infra/main.json

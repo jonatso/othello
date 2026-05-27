@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Board as BoardState } from "@othello/shared";
+import type { Board as BoardState } from "../types";
 import Tile from "./Tile";
 
 interface BoardProps {
@@ -21,12 +21,12 @@ const Board = ({ board, possibleMovesBoard, handleClick }: BoardProps) => {
 
     for (let row = 0; row < board.length; row++) {
       for (let col = 0; col < board[row].length; col++) {
-        const previousPiece = previousBoard[row]?.[col] ?? "";
+        const previousPiece = previousBoard[row]?.[col] ?? null;
         const currentPiece = board[row][col];
 
-        if (previousPiece === "" && currentPiece !== "") {
+        if (previousPiece === null && currentPiece !== null) {
           nextAnimations[`${row}-${col}`] = "placed";
-        } else if (previousPiece !== "" && previousPiece !== currentPiece) {
+        } else if (previousPiece !== null && previousPiece !== currentPiece) {
           nextAnimations[`${row}-${col}`] = "flipped";
         }
       }
@@ -43,7 +43,7 @@ const Board = ({ board, possibleMovesBoard, handleClick }: BoardProps) => {
     for (let j = 0; j < board[i].length; j++) {
       const boardPiece = board[i][j];
       const possiblePiece = possibleMovesBoard[i][j];
-      const isPossibleMove = possiblePiece !== "";
+      const isPossibleMove = possiblePiece !== null;
 
       tiles.push(
         <Tile

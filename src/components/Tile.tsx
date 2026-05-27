@@ -1,4 +1,4 @@
-import type { Piece } from "@othello/shared";
+import type { Piece } from "../types";
 
 interface TileProps {
   animation: "idle" | "placed" | "flipped";
@@ -17,7 +17,7 @@ const Tile = ({
   isPossibleMove,
   onClick,
 }: TileProps) => {
-  const hasPiece = pieceColor !== "";
+  const hasPiece = pieceColor !== null;
 
   return (
     <button

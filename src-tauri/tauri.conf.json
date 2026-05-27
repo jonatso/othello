@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Othello",
+  "version": "0.1.0",
+  "identifier": "com.jonatansolheim.othello",
+  "build": {
+    "beforeDevCommand": "pnpm dev:ui",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "pnpm build:ui",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Othello",
+        "width": 900,
+        "height": 760,
+        "minWidth": 680,
+        "minHeight": 620
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app"],
+    "icon": ["../public/favicon.ico"],
+    "macOS": {
+      "minimumSystemVersion": "11.0"
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["othello"]
+      }
+    }
+  }
+}
