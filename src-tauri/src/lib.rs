@@ -48,6 +48,7 @@ enum WireMessage {
         row: usize,
         col: usize,
     },
+    RematchStart,
     Leave,
 }
 
@@ -193,6 +194,32 @@ async fn current_game(state: State<'_, SharedState>) -> Result<GameSnapshot, Str
     Ok(snapshot(&state).await)
 }
 
+#[tauri::command]
+async fn request_rematch(state: State<'_, SharedState>) -> Result<GameSnapshot, String> {
+    let connection;
+
+    {
+        let mut app_state = state.lock().await;
+        if app_state.connection.is_none() {
+            return Err("No opponent is connected".to_string());
+        }
+        if !app_state.game_is_ended {
+            return Err("Rematch is available after the game ends".to_string());
+        }
+
+        app_state.start_rematch();
+        connection = app_state.connection.clone();
+    }
+
+    if let Some(connection) = connection {
+        send_message(&connection, WireMessage::RematchStart)
+        .await
+        .map_err(to_command_error)?;
+    }
+
+    Ok(snapshot(&state).await)
+}
+
 fn start_accept_loop(endpoint: Endpoint, state: SharedState, app: AppHandle) {
     tauri::async_runtime::spawn(async move {
         while let Some(connecting) = endpoint.accept().await {
@@ -275,6 +302,10 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
                     Ok(()) => {}
                     Err(error) => app_state.status = error,
                 }
+                None
+            }
+            WireMessage::RematchStart => {
+                app_state.start_rematch();
                 None
             }
             WireMessage::Leave => {
@@ -457,10 +488,20 @@ pub fn run() {
             join_game,
             make_move,
             leave_game,
-            current_game
+            current_game,
+            request_rematch
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+impl AppState {
+    fn start_rematch(&mut self) {
+        self.game_state = Some(create_game_state());
+        self.game_has_started = true;
+        self.game_is_ended = false;
+        self.status = "Rematch started!".to_string();
+    }
 }
 
 #[cfg(test)]
@@ -601,6 +642,26 @@ mod tests {
         join_connection.close(0u8.into(), b"test done");
         host_endpoint.close().await;
         join_endpoint.close().await;
+    }
+
+    #[test]
+    fn rematch_start_resets_game_state_immediately() {
+        let mut host_state = AppState {
+            game_state: Some(create_game_state()),
+            game_has_started: true,
+            game_is_ended: true,
+            is_player1: Some(true),
+            status: "White wins!".to_string(),
+            ..Default::default()
+        };
+
+        host_state.start_rematch();
+
+        let snapshot = host_state.snapshot();
+        assert!(snapshot.game_has_started);
+        assert!(!snapshot.game_is_ended);
+        assert_eq!(snapshot.status, "Rematch started!");
+        assert_eq!(snapshot.game_state, create_game_state());
     }
 
     async fn bind_loopback_endpoint() -> Endpoint {

@@ -1,15 +1,19 @@
 interface BottomInfoProps {
   isMyTurn: boolean;
   gameIsOngoing: boolean;
+  canRequestRematch: boolean;
   numWhitePieces: number;
   numBlackPieces: number;
+  clickRematch: () => void;
 }
 
 const BottomInfo = ({
   isMyTurn,
   gameIsOngoing,
+  canRequestRematch,
   numWhitePieces,
   numBlackPieces,
+  clickRematch,
 }: BottomInfoProps) => (
   <div className="bottom-info">
     <div className="scoreboard" aria-label="Score">
@@ -27,6 +31,11 @@ const BottomInfo = ({
       <p className={`turn-label ${isMyTurn ? "turn-label--active" : ""}`}>
         {isMyTurn ? "Your turn" : "Opponent's turn"}
       </p>
+    )}
+    {canRequestRematch && (
+      <button className="rematch-button" type="button" onClick={clickRematch}>
+        Rematch
+      </button>
     )}
   </div>
 );

@@ -45,6 +45,8 @@ const App = () => {
 
   const numWhitePieces = countPieces(snapshot.gameState.board, "w");
   const numBlackPieces = countPieces(snapshot.gameState.board, "b");
+  const canRequestRematch =
+    !modalIsOpen && snapshot.gameIsEnded && snapshot.gameHasStarted && snapshot.isPlayer1 !== null;
 
   const applySnapshot = useCallback((nextSnapshot: GameSnapshot) => {
     setSnapshot(nextSnapshot);
@@ -148,6 +150,10 @@ const App = () => {
             numBlackPieces={numBlackPieces}
             isMyTurn={isMyTurn}
             gameIsOngoing={snapshot.gameHasStarted && !snapshot.gameIsEnded}
+            canRequestRematch={canRequestRematch}
+            clickRematch={() => {
+              void invokeTauri<GameSnapshot>("request_rematch").then(applySnapshot);
+            }}
           />
         )}
       </main>

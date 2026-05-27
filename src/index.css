@@ -203,7 +203,8 @@ button {
 
 .icon-button,
 .primary-action,
-.secondary-action {
+.secondary-action,
+.rematch-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -227,7 +228,8 @@ button {
 
 .icon-button:hover,
 .primary-action:hover,
-.secondary-action:hover:not(:disabled) {
+.secondary-action:hover:not(:disabled),
+.rematch-button:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 
@@ -282,6 +284,18 @@ button {
   color: #102016;
   border-color: rgba(195, 236, 185, 0.7);
   background: #c9edbd;
+}
+
+.rematch-button {
+  padding: 0 16px;
+  color: #102016;
+  background: #c9edbd;
+}
+
+.rematch-button:disabled {
+  cursor: wait;
+  color: rgba(16, 32, 22, 0.62);
+  background: rgba(201, 237, 189, 0.62);
 }
 
 .modal {
