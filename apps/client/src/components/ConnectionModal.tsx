@@ -2,13 +2,19 @@ import { useState } from "react";
 import { LogIn, Plus } from "lucide-react";
 
 interface ConnectionModalProps {
+  initialRoomName?: string;
   clickJoin: (roomName: string) => void;
   clickHost: () => void;
   joinRoomError: string;
 }
 
-const ConnectionModal = ({ clickJoin, clickHost, joinRoomError }: ConnectionModalProps) => {
-  const [roomNameInputText, setRoomNameInputText] = useState("");
+const ConnectionModal = ({
+  initialRoomName = "",
+  clickJoin,
+  clickHost,
+  joinRoomError,
+}: ConnectionModalProps) => {
+  const [roomNameInputText, setRoomNameInputText] = useState(initialRoomName);
   const roomCode = roomNameInputText.trim().toLowerCase();
 
   return (

@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { createGameState, type Board, type GameState } from "@othello/shared";
 import BoardComponent from "./components/Board";
 import TopInfo from "./components/TopInfo";
@@ -10,6 +10,26 @@ const ENDPOINT = "http://localhost:3001";
 const socket: Socket = import.meta.env.DEV ? io(ENDPOINT) : io();
 
 const EMPTY_BOARD: Board = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ""));
+const GAME_CODE_PATTERN = /^[a-z0-9]{5}$/;
+
+const getGameCodeFromPath = () => {
+  const gameCode = window.location.pathname.split("/").filter(Boolean)[0]?.toLowerCase() ?? "";
+  return GAME_CODE_PATTERN.test(gameCode) ? gameCode : "";
+};
+
+const getGameUrl = (gameCode: string) => `${window.location.origin}/${gameCode}`;
+
+const setGamePath = (gameCode: string) => {
+  const path = gameCode ? `/${gameCode}` : "/";
+  if (window.location.pathname !== path) {
+    window.history.pushState(null, "", path);
+  }
+};
+
+const copyToClipboard = async (text: string) => {
+  if (!navigator.clipboard) throw new Error("Clipboard API is unavailable");
+  await navigator.clipboard.writeText(text);
+};
 
 const countPieces = (board: Board, piece: "w" | "b") =>
   board.flatMap((row) => row).filter((p) => p === piece).length;
@@ -23,6 +43,7 @@ const getWinnerText = (state: GameState) => {
 };
 
 const App = () => {
+  const initialGameCodeFromPath = useRef(getGameCodeFromPath());
   const [isPlayer1, setIsPlayer1] = useState<boolean | null>(null);
   const [gameState, setGameState] = useState<GameState>(() => createGameState());
   const [gameHasStarted, setGameHasStarted] = useState(false);
@@ -30,6 +51,7 @@ const App = () => {
   const [connectText, setConnectText] = useState("...");
   const [joinRoomError, setJoinRoomError] = useState("");
   const [modalIsOpen, setIsOpen] = useState(true);
+  const [gameCode, setGameCode] = useState(initialGameCodeFromPath.current);
 
   const isMyTurn = useMemo(
     () => gameState.isWhitesTurn === isPlayer1,
@@ -38,9 +60,14 @@ const App = () => {
 
   const numWhitePieces = countPieces(gameState.board, "w");
   const numBlackPieces = countPieces(gameState.board, "b");
+  const gameUrl = gameCode ? getGameUrl(gameCode) : "";
 
   useEffect(() => {
-    socket.on("gameCode", (roomName: string) => setConnectText(`Hosting on ${roomName}`));
+    socket.on("gameCode", (roomName: string) => {
+      setGameCode(roomName);
+      setGamePath(roomName);
+      setConnectText(`Hosting on ${roomName}`);
+    });
     socket.on("gameStateUpdate", (state: GameState) => setGameState(state));
     socket.on("isPlayer1", (val: boolean) => {
       setIsPlayer1(val);
@@ -58,6 +85,8 @@ const App = () => {
       setIsPlayer1(null);
       setGameHasStarted(false);
       setGameIsEnded(false);
+      setGameCode("");
+      setGamePath("");
     });
     socket.on("moveError", console.log);
     socket.on("badCode", (msg: string) => {
@@ -69,6 +98,12 @@ const App = () => {
       setGameIsEnded(true);
       setConnectText(getWinnerText(state));
     });
+
+    if (initialGameCodeFromPath.current) {
+      setGamePath(initialGameCodeFromPath.current);
+      setConnectText(`Joining ${initialGameCodeFromPath.current}...`);
+      socket.emit("joinGame", initialGameCodeFromPath.current);
+    }
 
     return () => {
       [
@@ -90,8 +125,16 @@ const App = () => {
         {!modalIsOpen && (
           <TopInfo
             connectText={connectText}
+            gameUrl={gameUrl}
+            clickCopyLink={() => {
+              void copyToClipboard(gameUrl)
+                .then(() => setConnectText("Link copied"))
+                .catch(() => setConnectText(gameUrl));
+            }}
             clickLeave={() => {
               socket.emit("leaveGame");
+              setGameCode("");
+              setGamePath("");
               setIsOpen(true);
             }}
           />
@@ -118,8 +161,11 @@ const App = () => {
       </main>
       {modalIsOpen && (
         <ConnectionModal
+          initialRoomName={gameCode}
           clickJoin={(roomName) => {
             socket.emit("joinGame", roomName);
+            setGameCode(roomName);
+            setGamePath(roomName);
             setJoinRoomError("");
           }}
           clickHost={() => {

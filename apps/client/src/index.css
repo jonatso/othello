@@ -160,6 +160,11 @@ button {
   gap: 12px;
 }
 
+.top-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
 .top-info,
 .bottom-info:has(.turn-label) {
   justify-content: space-between;

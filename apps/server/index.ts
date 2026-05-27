@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { readFileSync } from "node:fs";
 import { Server, Socket } from "socket.io";
 import express from "express";
 import { createServer } from "http";
@@ -7,12 +8,18 @@ import cors from "cors";
 import { applyMove, createGameState, type GameState } from "@othello/shared";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const clientDistPath = process.env.CLIENT_DIST_DIR ?? join(__dirname, "../../client/dist");
 
 const app = express();
 app.use(cors());
-app.use(express.static(join(__dirname, "../client/dist")));
+app.use(express.static(clientDistPath));
+
+app.use((_req, res) => {
+  res.type("html").send(readFileSync(join(clientDistPath, "index.html"), "utf8"));
+});
 
 const server = createServer(app);
+const port = process.env.PORT || 3001;
 
 const io = new Server(server, {
   cors: {
@@ -40,7 +47,7 @@ io.on("connection", (socket) => {
   socket.on("createGame", handleCreateGame);
   socket.on("makeMove", handleMakeMove);
 
-  function handleJoinGame(roomName: string) {
+  async function handleJoinGame(roomName: string) {
     console.log(`${socket.id} is trying to join ${roomName}`);
     const room = io.sockets.adapter.rooms.get(roomName);
 
@@ -57,20 +64,20 @@ io.on("connection", (socket) => {
     }
 
     socketToRoom.set(socket.id, roomName);
-    playerSocket.join(roomName);
+    await playerSocket.join(roomName);
     playerSocket.isPlayer1 = false;
     playerSocket.emit("isPlayer1", false);
     io.in(roomName).emit("startGame", gameStates.get(roomName));
   }
 
-  function handleCreateGame() {
+  async function handleCreateGame() {
     const roomName = makeId(5);
     socketToRoom.set(socket.id, roomName);
     playerSocket.emit("gameCode", roomName);
     playerSocket.emit("isPlayer1", true);
 
     gameStates.set(roomName, createGameState());
-    playerSocket.join(roomName);
+    await playerSocket.join(roomName);
     playerSocket.isPlayer1 = true;
     console.log(`${socket.id} created ${roomName}`);
   }
@@ -119,8 +126,8 @@ io.on("connection", (socket) => {
   }
 });
 
-server.listen(process.env.PORT || 3001, () => {
-  console.log("Server is running on port 3001");
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
 });
 
 function makeId(length: number): string {
