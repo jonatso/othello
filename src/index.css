@@ -196,6 +196,7 @@ button {
 
 .status-pill p,
 .turn-label,
+.color-label,
 .form-error,
 .modal-kicker {
   margin: 0;
@@ -277,6 +278,12 @@ button {
   padding: 0 16px;
   border-radius: 999px;
   color: #b9c4bd;
+  font-weight: 700;
+}
+
+.color-label {
+  padding: 0 12px;
+  color: #dce6de;
   font-weight: 700;
 }
 

@@ -1,5 +1,6 @@
 interface BottomInfoProps {
   isMyTurn: boolean;
+  playerColor: "white" | "black" | null;
   gameIsOngoing: boolean;
   canRequestRematch: boolean;
   numWhitePieces: number;
@@ -9,6 +10,7 @@ interface BottomInfoProps {
 
 const BottomInfo = ({
   isMyTurn,
+  playerColor,
   gameIsOngoing,
   canRequestRematch,
   numWhitePieces,
@@ -32,6 +34,7 @@ const BottomInfo = ({
         {isMyTurn ? "Your turn" : "Opponent's turn"}
       </p>
     )}
+    {playerColor && <p className="color-label">You are {playerColor}</p>}
     {canRequestRematch && (
       <button className="rematch-button" type="button" onClick={clickRematch}>
         Rematch

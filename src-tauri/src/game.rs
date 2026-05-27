@@ -66,7 +66,7 @@ pub fn create_game_state() -> GameState {
     board[4][3] = Some(Color::W);
     board[4][4] = Some(Color::B);
 
-    create_game_state_from_board(board, Color::W)
+    create_game_state_from_board(board, Color::B)
 }
 
 pub fn create_game_state_from_board(board: Board, current_player: Color) -> GameState {
@@ -235,18 +235,18 @@ mod tests {
         assert_eq!(state.board[3][4], Some(Color::W));
         assert_eq!(state.board[4][3], Some(Color::W));
         assert_eq!(state.board[4][4], Some(Color::B));
-        assert_eq!(get_valid_moves(&state.board, Color::W).len(), 4);
+        assert_eq!(get_valid_moves(&state.board, Color::B).len(), 4);
     }
 
     #[test]
     fn applies_opening_move() {
         let state = create_game_state();
-        let (next, ended) = apply_move(&state, Position { row: 2, col: 3 }).unwrap();
+        let (next, ended) = apply_move(&state, Position { row: 2, col: 4 }).unwrap();
 
         assert!(!ended);
-        assert_eq!(next.board[2][3], Some(Color::W));
-        assert_eq!(next.board[3][3], Some(Color::W));
-        assert!(!next.is_whites_turn);
+        assert_eq!(next.board[2][4], Some(Color::B));
+        assert_eq!(next.board[3][4], Some(Color::B));
+        assert!(next.is_whites_turn);
     }
 
     #[test]

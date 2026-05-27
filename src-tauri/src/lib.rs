@@ -43,6 +43,7 @@ enum WireMessage {
     State {
         game_state: GameState,
         game_is_ended: bool,
+        is_player1: Option<bool>,
     },
     Move {
         row: usize,
@@ -68,7 +69,7 @@ async fn create_game(
         app_state.game_state = Some(game_state);
         app_state.game_has_started = false;
         app_state.game_is_ended = false;
-        app_state.is_player1 = Some(true);
+        app_state.is_player1 = Some(rand::random());
         app_state.status = "Waiting for opponent".to_string();
         app_state.game_link = Some(game_link);
     }
@@ -93,7 +94,7 @@ async fn join_game(
         app_state.game_state = Some(create_game_state());
         app_state.game_has_started = false;
         app_state.game_is_ended = false;
-        app_state.is_player1 = Some(false);
+        app_state.is_player1 = None;
         app_state.status = "Joining game...".to_string();
         app_state.game_link = Some(game_link);
     }
@@ -275,21 +276,25 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
             WireMessage::Hello => {
                 app_state.game_has_started = true;
                 app_state.status = "Game started!".to_string();
+                let peer_is_player1 = app_state.is_player1.map(|is_player1| !is_player1);
                 app_state
                     .game_state
                     .as_ref()
                     .map(|game_state| WireMessage::State {
                         game_state: game_state.clone(),
                         game_is_ended: app_state.game_is_ended,
+                        is_player1: peer_is_player1,
                     })
             }
             WireMessage::State {
                 game_state,
                 game_is_ended,
+                is_player1,
             } => {
                 app_state.game_state = Some(game_state.clone());
                 app_state.game_has_started = true;
                 app_state.game_is_ended = game_is_ended;
+                app_state.is_player1 = is_player1;
                 app_state.status = if game_is_ended {
                     winner_text(&game_state)
                 } else {
@@ -558,7 +563,7 @@ mod tests {
             game_state: Some(create_game_state()),
             game_has_started: true,
             game_is_ended: false,
-            is_player1: Some(true),
+            is_player1: Some(false),
             status: "Game started!".to_string(),
             game_link: Some(host_link),
             ..Default::default()
@@ -590,6 +595,7 @@ mod tests {
             WireMessage::State {
                 game_state: initial_state.clone(),
                 game_is_ended: false,
+                is_player1: Some(true),
             },
         )
         .await
@@ -603,19 +609,21 @@ mod tests {
             WireMessage::State {
                 game_state,
                 game_is_ended,
+                is_player1,
             } => {
                 join_state.game_state = Some(game_state);
                 join_state.game_has_started = true;
                 join_state.game_is_ended = game_is_ended;
+                join_state.is_player1 = is_player1;
             }
             message => panic!("expected state message, got {message:?}"),
         }
 
         let (host_next_state, host_game_ended) =
-            apply_move(&initial_state, Position { row: 2, col: 3 }).unwrap();
+            apply_move(&initial_state, Position { row: 2, col: 4 }).unwrap();
         host_state.game_state = Some(host_next_state.clone());
         host_state.game_is_ended = host_game_ended;
-        send_message(&host_connection, WireMessage::Move { row: 2, col: 3 })
+        send_message(&host_connection, WireMessage::Move { row: 2, col: 4 })
             .await
             .expect("host should send move");
 
@@ -633,8 +641,8 @@ mod tests {
         assert_eq!(join_state.game_state, Some(host_next_state));
         assert_eq!(join_state.game_is_ended, host_game_ended);
         assert_eq!(
-            join_state.game_state.unwrap().board[3][3],
-            Some(Color::W),
+            join_state.game_state.unwrap().board[3][4],
+            Some(Color::B),
             "the joined peer should apply the host move and flip the captured piece",
         );
 

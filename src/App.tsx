@@ -45,6 +45,7 @@ const App = () => {
 
   const numWhitePieces = countPieces(snapshot.gameState.board, "w");
   const numBlackPieces = countPieces(snapshot.gameState.board, "b");
+  const playerColor = isPlayer1 === null ? null : isPlayer1 ? "white" : "black";
   const canRequestRematch =
     !modalIsOpen && snapshot.gameIsEnded && snapshot.gameHasStarted && snapshot.isPlayer1 !== null;
 
@@ -149,6 +150,7 @@ const App = () => {
             numWhitePieces={numWhitePieces}
             numBlackPieces={numBlackPieces}
             isMyTurn={isMyTurn}
+            playerColor={playerColor}
             gameIsOngoing={snapshot.gameHasStarted && !snapshot.gameIsEnded}
             canRequestRematch={canRequestRematch}
             clickRematch={() => {
