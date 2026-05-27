@@ -6,9 +6,10 @@
     "dev": "echo 'Run pnpm dev:server and pnpm dev:client in separate terminals'",
     "dev:server": "vp run --filter @othello/server dev",
     "dev:client": "vp run --filter @othello/client dev",
-    "build": "vp run build",
+    "build": "pnpm --filter @othello/shared build && pnpm --filter @othello/client build && pnpm --filter @othello/server build",
     "check": "vp check",
-    "fmt": "vp fmt"
+    "fmt": "vp fmt",
+    "test": "pnpm --filter @othello/shared test"
   },
   "devDependencies": {
     "vite-plus": "^0.1.0"

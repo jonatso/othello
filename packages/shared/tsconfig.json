@@ -7,7 +7,10 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "isolatedModules": true,
-    "declaration": true
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": ["types"]
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
 }

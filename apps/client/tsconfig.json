@@ -13,7 +13,7 @@
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "paths": {
-      "@othello/shared": ["../../packages/shared/types"]
+      "@othello/shared": ["../../packages/shared/src"]
     }
   },
   "include": ["src"]
