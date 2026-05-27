@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { LogIn, Plus } from "lucide-react";
 
 interface ConnectionModalProps {
   clickJoin: (roomName: string) => void;
@@ -8,28 +9,44 @@ interface ConnectionModalProps {
 
 const ConnectionModal = ({ clickJoin, clickHost, joinRoomError }: ConnectionModalProps) => {
   const [roomNameInputText, setRoomNameInputText] = useState("");
+  const roomCode = roomNameInputText.trim().toLowerCase();
 
   return (
-    <div className="modal">
-      <h2>Welcome to Othello!</h2>
-      <button onClick={clickHost}>Host game</button>
-      <input
-        type="text"
-        value={roomNameInputText}
-        placeholder="enter room code"
-        onChange={(e) => setRoomNameInputText(e.target.value)}
-      />
-      <button
-        disabled={roomNameInputText.length < 4}
-        onClick={() => {
-          clickJoin(roomNameInputText);
-          setRoomNameInputText("");
-        }}
-      >
-        Join game
+    <form
+      className="modal"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (roomCode.length < 5) return;
+        clickJoin(roomCode);
+        setRoomNameInputText("");
+      }}
+    >
+      <div>
+        <p className="modal-kicker">Online Reversi</p>
+        <h1>Othello</h1>
+      </div>
+      <button className="primary-action" type="button" onClick={clickHost}>
+        <Plus size={18} strokeWidth={2.3} />
+        <span>Host game</span>
       </button>
-      <p>{joinRoomError}</p>
-    </div>
+      <div className="join-row">
+        <input
+          type="text"
+          value={roomNameInputText}
+          placeholder="room code"
+          maxLength={5}
+          autoComplete="off"
+          onChange={(e) => setRoomNameInputText(e.target.value)}
+        />
+        <button className="secondary-action" type="submit" disabled={roomCode.length < 5}>
+          <LogIn size={18} strokeWidth={2.3} />
+          <span>Join</span>
+        </button>
+      </div>
+      <p className="form-error" aria-live="polite">
+        {joinRoomError}
+      </p>
+    </form>
   );
 };
 

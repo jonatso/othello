@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { useState, useEffect, useMemo } from "react";
-import type { Board, GameState } from "@othello/shared";
+import { createGameState, type Board, type GameState } from "@othello/shared";
 import BoardComponent from "./components/Board";
 import TopInfo from "./components/TopInfo";
 import BottomInfo from "./components/BottomInfo";
@@ -11,15 +11,20 @@ const socket: Socket = import.meta.env.DEV ? io(ENDPOINT) : io();
 
 const EMPTY_BOARD: Board = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ""));
 
-const INITIAL_STATE: GameState = {
-  board: structuredClone(EMPTY_BOARD),
-  possibleMovesBoard: structuredClone(EMPTY_BOARD),
-  isWhitesTurn: true,
+const countPieces = (board: Board, piece: "w" | "b") =>
+  board.flatMap((row) => row).filter((p) => p === piece).length;
+
+const getWinnerText = (state: GameState) => {
+  const numWhitePieces = countPieces(state.board, "w");
+  const numBlackPieces = countPieces(state.board, "b");
+
+  if (numWhitePieces === numBlackPieces) return "It's a tie!";
+  return numWhitePieces > numBlackPieces ? "White wins!" : "Black wins!";
 };
 
 const App = () => {
   const [isPlayer1, setIsPlayer1] = useState<boolean | null>(null);
-  const [gameState, setGameState] = useState<GameState>(INITIAL_STATE);
+  const [gameState, setGameState] = useState<GameState>(() => createGameState());
   const [gameHasStarted, setGameHasStarted] = useState(false);
   const [gameIsEnded, setGameIsEnded] = useState(false);
   const [connectText, setConnectText] = useState("...");
@@ -31,16 +36,8 @@ const App = () => {
     [gameState.isWhitesTurn, isPlayer1],
   );
 
-  const count = (piece: "w" | "b") =>
-    gameState.board.flatMap((row) => row).filter((p) => p === piece).length;
-
-  const numWhitePieces = count("w");
-  const numBlackPieces = count("b");
-
-  const getWinnerText = () => {
-    if (numWhitePieces === numBlackPieces) return "It's a tie!";
-    return numWhitePieces > numBlackPieces ? "White wins!" : "Black wins!";
-  };
+  const numWhitePieces = countPieces(gameState.board, "w");
+  const numBlackPieces = countPieces(gameState.board, "b");
 
   useEffect(() => {
     socket.on("gameCode", (roomName: string) => setConnectText(`Hosting on ${roomName}`));
@@ -52,13 +49,15 @@ const App = () => {
     socket.on("startGame", (state: GameState) => {
       setGameState(state);
       setGameHasStarted(true);
+      setGameIsEnded(false);
       setConnectText("Game started!");
     });
     socket.on("opponentLeft", () => {
       setConnectText("Your opponent left the game");
-      setGameState({ ...INITIAL_STATE });
+      setGameState(createGameState());
       setIsPlayer1(null);
       setGameHasStarted(false);
+      setGameIsEnded(false);
     });
     socket.on("moveError", console.log);
     socket.on("badCode", (msg: string) => {
@@ -68,7 +67,7 @@ const App = () => {
     socket.on("gameEnded", (state: GameState) => {
       setGameState(state);
       setGameIsEnded(true);
-      setConnectText(getWinnerText());
+      setConnectText(getWinnerText(state));
     });
 
     return () => {
@@ -87,6 +86,36 @@ const App = () => {
 
   return (
     <div className="app">
+      <main className="game-layout">
+        {!modalIsOpen && (
+          <TopInfo
+            connectText={connectText}
+            clickLeave={() => {
+              socket.emit("leaveGame");
+              setIsOpen(true);
+            }}
+          />
+        )}
+        <BoardComponent
+          board={gameState.board}
+          possibleMovesBoard={
+            !modalIsOpen && gameHasStarted && isMyTurn ? gameState.possibleMovesBoard : EMPTY_BOARD
+          }
+          handleClick={(x, y) => {
+            if (!isMyTurn || modalIsOpen) return;
+            if (gameState.possibleMovesBoard[x][y] === "") return;
+            socket.emit("makeMove", { x, y });
+          }}
+        />
+        {!modalIsOpen && (
+          <BottomInfo
+            numWhitePieces={numWhitePieces}
+            numBlackPieces={numBlackPieces}
+            isMyTurn={isMyTurn}
+            gameIsOngoing={gameHasStarted && !gameIsEnded}
+          />
+        )}
+      </main>
       {modalIsOpen && (
         <ConnectionModal
           clickJoin={(roomName) => {
@@ -95,39 +124,12 @@ const App = () => {
           }}
           clickHost={() => {
             socket.emit("createGame");
+            setGameState(createGameState());
             setIsOpen(false);
+            setGameIsEnded(false);
             setJoinRoomError("");
           }}
           joinRoomError={joinRoomError}
-        />
-      )}
-      {!modalIsOpen && (
-        <TopInfo
-          connectText={connectText}
-          gameHasStarted={gameHasStarted}
-          clickLeave={() => {
-            socket.emit("leaveGame");
-            setIsOpen(true);
-          }}
-        />
-      )}
-      {!modalIsOpen && (
-        <BoardComponent
-          board={gameState.board}
-          possibleMovesBoard={isMyTurn ? gameState.possibleMovesBoard : EMPTY_BOARD}
-          handleClick={(x, y) => {
-            if (!isMyTurn) return;
-            if (gameState.possibleMovesBoard[x][y] === "") return;
-            socket.emit("makeMove", { x, y });
-          }}
-        />
-      )}
-      {!modalIsOpen && (
-        <BottomInfo
-          numWhitePieces={numWhitePieces}
-          numBlackPieces={numBlackPieces}
-          isMyTurn={isMyTurn}
-          gameIsOngoing={gameHasStarted && !gameIsEnded}
         />
       )}
     </div>

@@ -1,20 +1,35 @@
+import type { Piece } from "@othello/shared";
+
 interface TileProps {
-  hasPiece: boolean;
-  hasTransparentPiece: boolean;
-  pieceColor: string;
+  animation: "idle" | "placed" | "flipped";
+  pieceColor: Piece;
+  possibleMoveColor: Piece;
   isOdd: boolean;
+  isPossibleMove: boolean;
   onClick: () => void;
 }
 
-const Tile = ({ hasPiece, hasTransparentPiece, pieceColor, isOdd, onClick }: TileProps) => {
-  const colorClass = pieceColor === "w" ? "w" : pieceColor === "b" ? "b" : "";
+const Tile = ({
+  animation,
+  pieceColor,
+  possibleMoveColor,
+  isOdd,
+  isPossibleMove,
+  onClick,
+}: TileProps) => {
+  const hasPiece = pieceColor !== "";
+
   return (
-    <div className={`tile tile--${isOdd ? "odd" : "even"}`}>
-      {hasPiece && <div className={`piece piece--${colorClass}`} />}
-      {hasTransparentPiece && (
-        <div onClick={onClick} className={`piece piece--${colorClass} piece--t`} />
-      )}
-    </div>
+    <button
+      type="button"
+      className={`tile tile--${isOdd ? "odd" : "even"} ${isPossibleMove ? "tile--playable" : ""}`}
+      disabled={!isPossibleMove}
+      onClick={onClick}
+      aria-label={isPossibleMove ? "Play move" : "Board square"}
+    >
+      {hasPiece && <span className={`piece piece--${pieceColor} piece--${animation}`} />}
+      {isPossibleMove && <span className={`move-hint move-hint--${possibleMoveColor}`} />}
+    </button>
   );
 };
 
