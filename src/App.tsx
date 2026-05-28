@@ -146,7 +146,7 @@ const App = () => {
         {!modalIsOpen && (
           <TopInfo
             connectText={snapshot.status}
-            gameUrl={snapshot.gameLink ?? ""}
+            gameUrl={!snapshot.gameHasStarted ? (snapshot.gameLink ?? "") : ""}
             clickCopyLink={() => {
               if (!snapshot.gameLink) return;
               void copyToClipboard(snapshot.gameLink)
