@@ -6,6 +6,7 @@
     "dev": "tauri dev",
     "dev:ui": "vite",
     "build": "tauri build",
+    "tauri": "tauri",
     "build:ui": "tsc && vite build",
     "preview": "vite preview",
     "check": "pnpm build:ui && cargo test --manifest-path src-tauri/Cargo.toml",

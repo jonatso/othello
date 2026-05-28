@@ -330,8 +330,21 @@ button {
   text-transform: uppercase;
 }
 
+.modal-heading {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.modal-logo {
+  width: 88px;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
+}
+
 .modal h1 {
-  margin: 4px 0 0;
+  margin: -4px 0 0;
   color: #f8faf7;
   font-size: 2.25rem;
   line-height: 1;
