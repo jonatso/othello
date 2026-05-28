@@ -113,8 +113,8 @@ const App = () => {
   }, [applySnapshot, joinGame]);
 
   return (
-    <div className="app">
-      <main className="game-layout">
+    <div className="grid min-h-screen place-items-center overflow-hidden bg-[#111214] bg-[linear-gradient(135deg,rgba(45,57,71,0.64),transparent_45%),linear-gradient(315deg,rgba(77,93,77,0.34),transparent_42%)] p-4 sm:p-6">
+      <main className="grid w-full max-w-[780px] items-center justify-items-center gap-3 sm:gap-4">
         {!modalIsOpen && (
           <TopInfo
             connectText={snapshot.status}

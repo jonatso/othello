@@ -60,8 +60,10 @@ const Board = ({ board, possibleMovesBoard, handleClick }: BoardProps) => {
   }
 
   return (
-    <div className="board-shell">
-      <div className="board">{tiles}</div>
+    <div className="aspect-square w-[min(68vh,94vw)] rounded-lg border border-white/15 bg-[linear-gradient(145deg,#2f3b37,#151a1a)] p-[7px] shadow-[0_30px_80px_rgba(0,0,0,0.44),inset_0_1px_0_rgba(255,255,255,0.12)] sm:w-[min(70vh,92vw,640px)] sm:p-2.5">
+      <div className="grid h-full w-full grid-cols-8 grid-rows-8 overflow-hidden rounded-[5px] border border-[#08120ed1] bg-[#3c795d]">
+        {tiles}
+      </div>
     </div>
   );
 };
