@@ -49,9 +49,7 @@ enum WireMessage {
         row: usize,
         col: usize,
     },
-    RematchStart {
-        is_player1: Option<bool>,
-    },
+    RematchStart,
     Leave,
 }
 
@@ -200,7 +198,6 @@ async fn current_game(state: State<'_, SharedState>) -> Result<GameSnapshot, Str
 #[tauri::command]
 async fn request_rematch(state: State<'_, SharedState>) -> Result<GameSnapshot, String> {
     let connection;
-    let peer_is_player1;
 
     {
         let mut app_state = state.lock().await;
@@ -211,21 +208,14 @@ async fn request_rematch(state: State<'_, SharedState>) -> Result<GameSnapshot, 
             return Err("Rematch is available after the game ends".to_string());
         }
 
-        let is_player1: Option<bool> = Some(rand::random());
-        peer_is_player1 = is_player1.map(|is_player1| !is_player1);
-        app_state.start_rematch(is_player1);
+        app_state.start_rematch()?;
         connection = app_state.connection.clone();
     }
 
     if let Some(connection) = connection {
-        send_message(
-            &connection,
-            WireMessage::RematchStart {
-                is_player1: peer_is_player1,
-            },
-        )
-        .await
-        .map_err(to_command_error)?;
+        send_message(&connection, WireMessage::RematchStart)
+            .await
+            .map_err(to_command_error)?;
     }
 
     Ok(snapshot(&state).await)
@@ -319,8 +309,10 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
                 }
                 None
             }
-            WireMessage::RematchStart { is_player1 } => {
-                app_state.start_rematch(is_player1);
+            WireMessage::RematchStart => {
+                if let Err(error) = app_state.start_rematch() {
+                    app_state.status = error;
+                }
                 None
             }
             WireMessage::Leave => {
@@ -511,12 +503,22 @@ pub fn run() {
 }
 
 impl AppState {
-    fn start_rematch(&mut self, is_player1: Option<bool>) {
+    fn start_rematch(&mut self) -> Result<(), String> {
+        if !self.game_is_ended {
+            return Ok(());
+        }
+
+        let is_player1 = self
+            .is_player1
+            .map(|is_player1| !is_player1)
+            .ok_or_else(|| "You are not in a game".to_string())?;
+
         self.game_state = Some(create_game_state());
         self.game_has_started = true;
         self.game_is_ended = false;
-        self.is_player1 = is_player1;
+        self.is_player1 = Some(is_player1);
         self.status = "Rematch started!".to_string();
+        Ok(())
     }
 }
 
@@ -674,7 +676,7 @@ mod tests {
             ..Default::default()
         };
 
-        host_state.start_rematch(Some(false));
+        host_state.start_rematch().unwrap();
 
         let snapshot = host_state.snapshot();
         assert!(snapshot.game_has_started);
@@ -685,7 +687,7 @@ mod tests {
     }
 
     #[test]
-    fn rematch_message_can_assign_the_opposite_player_role() {
+    fn rematch_message_swaps_the_receiving_player_role() {
         let mut join_state = AppState {
             game_state: Some(create_game_state()),
             game_has_started: true,
@@ -695,10 +697,8 @@ mod tests {
             ..Default::default()
         };
 
-        match (WireMessage::RematchStart {
-            is_player1: Some(true),
-        }) {
-            WireMessage::RematchStart { is_player1 } => join_state.start_rematch(is_player1),
+        match WireMessage::RematchStart {
+            WireMessage::RematchStart => join_state.start_rematch().unwrap(),
             _ => unreachable!(),
         }
 
@@ -707,6 +707,23 @@ mod tests {
         assert!(!snapshot.game_is_ended);
         assert_eq!(snapshot.is_player1, Some(true));
         assert_eq!(snapshot.game_state, create_game_state());
+    }
+
+    #[test]
+    fn remote_rematch_is_ignored_after_local_rematch_started() {
+        let mut host_state = AppState {
+            game_state: Some(create_game_state()),
+            game_has_started: true,
+            game_is_ended: true,
+            is_player1: Some(true),
+            status: "White wins!".to_string(),
+            ..Default::default()
+        };
+
+        host_state.start_rematch().unwrap();
+        host_state.start_rematch().unwrap();
+
+        assert_eq!(host_state.snapshot().is_player1, Some(false));
     }
 
     async fn bind_loopback_endpoint() -> Endpoint {
