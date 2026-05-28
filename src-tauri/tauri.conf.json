@@ -13,9 +13,9 @@
     "windows": [
       {
         "title": "OthelloP2P",
-        "width": 900,
+        "width": 620,
         "height": 760,
-        "minWidth": 680,
+        "minWidth": 560,
         "minHeight": 620
       }
     ],
