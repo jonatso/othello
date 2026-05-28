@@ -49,7 +49,9 @@ enum WireMessage {
         row: usize,
         col: usize,
     },
-    RematchStart,
+    RematchStart {
+        is_player1: Option<bool>,
+    },
     Leave,
 }
 
@@ -198,6 +200,7 @@ async fn current_game(state: State<'_, SharedState>) -> Result<GameSnapshot, Str
 #[tauri::command]
 async fn request_rematch(state: State<'_, SharedState>) -> Result<GameSnapshot, String> {
     let connection;
+    let peer_is_player1;
 
     {
         let mut app_state = state.lock().await;
@@ -208,12 +211,19 @@ async fn request_rematch(state: State<'_, SharedState>) -> Result<GameSnapshot, 
             return Err("Rematch is available after the game ends".to_string());
         }
 
-        app_state.start_rematch();
+        let is_player1: Option<bool> = Some(rand::random());
+        peer_is_player1 = is_player1.map(|is_player1| !is_player1);
+        app_state.start_rematch(is_player1);
         connection = app_state.connection.clone();
     }
 
     if let Some(connection) = connection {
-        send_message(&connection, WireMessage::RematchStart)
+        send_message(
+            &connection,
+            WireMessage::RematchStart {
+                is_player1: peer_is_player1,
+            },
+        )
         .await
         .map_err(to_command_error)?;
     }
@@ -309,8 +319,8 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
                 }
                 None
             }
-            WireMessage::RematchStart => {
-                app_state.start_rematch();
+            WireMessage::RematchStart { is_player1 } => {
+                app_state.start_rematch(is_player1);
                 None
             }
             WireMessage::Leave => {
@@ -501,10 +511,11 @@ pub fn run() {
 }
 
 impl AppState {
-    fn start_rematch(&mut self) {
+    fn start_rematch(&mut self, is_player1: Option<bool>) {
         self.game_state = Some(create_game_state());
         self.game_has_started = true;
         self.game_is_ended = false;
+        self.is_player1 = is_player1;
         self.status = "Rematch started!".to_string();
     }
 }
@@ -663,12 +674,38 @@ mod tests {
             ..Default::default()
         };
 
-        host_state.start_rematch();
+        host_state.start_rematch(Some(false));
 
         let snapshot = host_state.snapshot();
         assert!(snapshot.game_has_started);
         assert!(!snapshot.game_is_ended);
+        assert_eq!(snapshot.is_player1, Some(false));
         assert_eq!(snapshot.status, "Rematch started!");
+        assert_eq!(snapshot.game_state, create_game_state());
+    }
+
+    #[test]
+    fn rematch_message_can_assign_the_opposite_player_role() {
+        let mut join_state = AppState {
+            game_state: Some(create_game_state()),
+            game_has_started: true,
+            game_is_ended: true,
+            is_player1: Some(false),
+            status: "Black wins!".to_string(),
+            ..Default::default()
+        };
+
+        match (WireMessage::RematchStart {
+            is_player1: Some(true),
+        }) {
+            WireMessage::RematchStart { is_player1 } => join_state.start_rematch(is_player1),
+            _ => unreachable!(),
+        }
+
+        let snapshot = join_state.snapshot();
+        assert!(snapshot.game_has_started);
+        assert!(!snapshot.game_is_ended);
+        assert_eq!(snapshot.is_player1, Some(true));
         assert_eq!(snapshot.game_state, create_game_state());
     }
 

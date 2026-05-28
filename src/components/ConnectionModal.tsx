@@ -31,7 +31,6 @@ const ConnectionModal = ({
     >
       <div className="modal-heading">
         <img className="modal-logo" src="/othello.svg" alt="" aria-hidden="true" />
-        <p className="modal-kicker">Online Reversi</p>
         <h1>Othello</h1>
       </div>
       <button

@@ -197,8 +197,7 @@ button {
 .status-pill p,
 .turn-label,
 .color-label,
-.form-error,
-.modal-kicker {
+.form-error {
   margin: 0;
 }
 
@@ -320,14 +319,6 @@ button {
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48);
   transform: translate(-50%, -50%);
   backdrop-filter: blur(22px);
-}
-
-.modal-kicker {
-  color: #91d0aa;
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .modal-heading {
