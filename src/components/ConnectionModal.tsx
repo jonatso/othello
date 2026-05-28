@@ -35,13 +35,7 @@ const ConnectionModal = ({
       }}
     >
       <div className="grid justify-items-start gap-2.5">
-        <img
-          className="aspect-square w-[88px] rounded-[20px] shadow-[0_16px_34px_rgba(0,0,0,0.34)]"
-          src="/othello.svg"
-          alt=""
-          aria-hidden="true"
-        />
-        <h1 className="m-0 text-4xl leading-none text-[#f8faf7]">Othello</h1>
+        <h1 className="m-0 text-4xl leading-none text-[#f8faf7]">OthelloP2P</h1>
       </div>
       <button
         className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#c9edbd] font-bold text-[#102016] transition-[transform,background,color] duration-150 hover:-translate-y-px hover:bg-[#d8f5ce] disabled:cursor-not-allowed disabled:bg-[#c9edbd9e] disabled:text-[#1020169e] disabled:hover:translate-y-0"

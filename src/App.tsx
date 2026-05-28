@@ -81,7 +81,7 @@ const App = () => {
       try {
         if (!isTauriRuntime()) {
           throw new Error(
-            "Open the app with `pnpm dev` or the built Othello.app. The plain browser preview cannot host or join P2P games.",
+            "Open the app with `pnpm dev` or the built OthelloP2P.app. The plain browser preview cannot host or join P2P games.",
           );
         }
 

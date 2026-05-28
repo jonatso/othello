@@ -1,6 +1,6 @@
-# Othello
+# OthelloP2P
 
-A Tauri + React Othello app that connects two desktop clients directly over iroh.
+A Tauri + React OthelloP2P app that connects two desktop clients directly over iroh.
 
 ## Development
 

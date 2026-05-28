@@ -1,7 +1,7 @@
 [package]
 name = "othello"
 version = "0.1.0"
-description = "P2P Othello"
+description = "OthelloP2P"
 authors = ["Jonatan Solheim"]
 edition = "2021"
 

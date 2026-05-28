@@ -475,7 +475,7 @@ fn parse_game_link(link: &str) -> Result<EndpointAddr> {
 fn start_discovery_advertisement(game_link: &str) -> Result<DiscoveryAdvertisement> {
     let daemon = ServiceDaemon::new().context("failed to start nearby discovery")?;
     let properties = discovery_properties(game_link);
-    let instance_name = format!("Othello {}", rand::random::<u16>());
+    let instance_name = format!("OthelloP2P {}", rand::random::<u16>());
     let host_name = format!("othello-{}.local.", rand::random::<u16>());
     let service_info = ServiceInfo::new(
         DISCOVERY_SERVICE_TYPE,
