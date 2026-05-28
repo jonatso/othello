@@ -14,11 +14,11 @@ const INITIAL_SNAPSHOT: GameSnapshot = {
   gameState: {
     board: EMPTY_BOARD,
     possibleMovesBoard: EMPTY_BOARD,
-    isWhitesTurn: true,
+    isBlacksTurn: true,
   },
   gameHasStarted: false,
   gameIsEnded: false,
-  isPlayer1: null,
+  isBlack: null,
   status: "Ready",
   gameLink: null,
 };
@@ -37,21 +37,21 @@ const App = () => {
   const [connectionPending, setConnectionPending] = useState<"host" | "join" | null>(null);
   const [modalIsOpen, setIsOpen] = useState(true);
 
-  const isPlayer1 = snapshot.isPlayer1;
+  const isBlack = snapshot.isBlack;
   const isMyTurn = useMemo(
-    () => isPlayer1 !== null && snapshot.gameState.isWhitesTurn === isPlayer1,
-    [snapshot.gameState.isWhitesTurn, isPlayer1],
+    () => isBlack !== null && snapshot.gameState.isBlacksTurn === isBlack,
+    [snapshot.gameState.isBlacksTurn, isBlack],
   );
 
   const numWhitePieces = countPieces(snapshot.gameState.board, "w");
   const numBlackPieces = countPieces(snapshot.gameState.board, "b");
-  const playerColor = isPlayer1 === null ? null : isPlayer1 ? "white" : "black";
+  const playerColor = isBlack === null ? null : isBlack ? "black" : "white";
   const canRequestRematch =
-    !modalIsOpen && snapshot.gameIsEnded && snapshot.gameHasStarted && snapshot.isPlayer1 !== null;
+    !modalIsOpen && snapshot.gameIsEnded && snapshot.gameHasStarted && snapshot.isBlack !== null;
 
   const applySnapshot = useCallback((nextSnapshot: GameSnapshot) => {
     setSnapshot(nextSnapshot);
-    setIsOpen(nextSnapshot.isPlayer1 === null);
+    setIsOpen(nextSnapshot.isBlack === null);
   }, []);
 
   const joinGame = useCallback(

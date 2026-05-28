@@ -5,14 +5,14 @@ export type Board = Piece[][];
 export interface GameState {
   board: Board;
   possibleMovesBoard: Board;
-  isWhitesTurn: boolean;
+  isBlacksTurn: boolean;
 }
 
 export interface GameSnapshot {
   gameState: GameState;
   gameHasStarted: boolean;
   gameIsEnded: boolean;
-  isPlayer1: boolean | null;
+  isBlack: boolean | null;
   status: string;
   gameLink: string | null;
 }

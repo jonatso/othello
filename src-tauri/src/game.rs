@@ -23,7 +23,7 @@ pub type Board = [[Piece; BOARD_SIZE]; BOARD_SIZE];
 pub struct GameState {
     pub board: Board,
     pub possible_moves_board: Board,
-    pub is_whites_turn: bool,
+    pub is_blacks_turn: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -32,7 +32,7 @@ pub struct GameSnapshot {
     pub game_state: GameState,
     pub game_has_started: bool,
     pub game_is_ended: bool,
-    pub is_player1: Option<bool>,
+    pub is_black: Option<bool>,
     pub status: String,
     pub game_link: Option<String>,
 }
@@ -73,7 +73,7 @@ pub fn create_game_state_from_board(board: Board, current_player: Color) -> Game
     GameState {
         board,
         possible_moves_board: create_possible_moves_board(&board, current_player),
-        is_whites_turn: current_player == Color::W,
+        is_blacks_turn: current_player == Color::B,
     }
 }
 
@@ -103,10 +103,10 @@ pub fn apply_move(
 }
 
 pub fn get_current_player(game_state: &GameState) -> Color {
-    if game_state.is_whites_turn {
-        Color::W
-    } else {
+    if game_state.is_blacks_turn {
         Color::B
+    } else {
+        Color::W
     }
 }
 
@@ -246,7 +246,7 @@ mod tests {
         assert!(!ended);
         assert_eq!(next.board[2][4], Some(Color::B));
         assert_eq!(next.board[3][4], Some(Color::B));
-        assert!(next.is_whites_turn);
+        assert!(!next.is_blacks_turn);
     }
 
     #[test]

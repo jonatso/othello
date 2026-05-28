@@ -25,7 +25,7 @@ struct AppState {
     game_state: Option<GameState>,
     game_has_started: bool,
     game_is_ended: bool,
-    is_player1: Option<bool>,
+    is_black: Option<bool>,
     status: String,
     game_link: Option<String>,
 }
@@ -43,7 +43,7 @@ enum WireMessage {
     State {
         game_state: GameState,
         game_is_ended: bool,
-        is_player1: Option<bool>,
+        is_black: Option<bool>,
     },
     Move {
         row: usize,
@@ -69,7 +69,7 @@ async fn create_game(
         app_state.game_state = Some(game_state);
         app_state.game_has_started = false;
         app_state.game_is_ended = false;
-        app_state.is_player1 = Some(rand::random());
+        app_state.is_black = Some(rand::random());
         app_state.status = "Waiting for opponent".to_string();
         app_state.game_link = Some(game_link);
     }
@@ -94,7 +94,7 @@ async fn join_game(
         app_state.game_state = Some(create_game_state());
         app_state.game_has_started = false;
         app_state.game_is_ended = false;
-        app_state.is_player1 = None;
+        app_state.is_black = None;
         app_state.status = "Joining game...".to_string();
         app_state.game_link = Some(game_link);
     }
@@ -128,15 +128,15 @@ async fn make_move(
             return Err("Game is not active".to_string());
         }
 
-        let is_player1 = app_state
-            .is_player1
+        let is_black = app_state
+            .is_black
             .ok_or_else(|| "You are not in a game".to_string())?;
         let game_state = app_state
             .game_state
             .clone()
             .ok_or_else(|| "Game state is unavailable".to_string())?;
 
-        if game_state.is_whites_turn != is_player1 {
+        if game_state.is_blacks_turn != is_black {
             return Err("It is not your turn".to_string());
         }
 
@@ -174,7 +174,7 @@ async fn leave_game(state: State<'_, SharedState>) -> Result<GameSnapshot, Strin
         app_state.game_state = Some(create_game_state());
         app_state.game_has_started = false;
         app_state.game_is_ended = false;
-        app_state.is_player1 = None;
+        app_state.is_black = None;
         app_state.status = "Ready".to_string();
         app_state.game_link = None;
     }
@@ -242,7 +242,7 @@ async fn register_connection(connection: Connection, state: SharedState, app: Ap
     {
         let mut app_state = state.lock().await;
         app_state.connection = Some(connection.clone());
-        if app_state.is_player1 == Some(true) {
+        if app_state.is_black == Some(false) {
             app_state.game_has_started = true;
             app_state.status = "Game started!".to_string();
         }
@@ -276,25 +276,25 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
             WireMessage::Hello => {
                 app_state.game_has_started = true;
                 app_state.status = "Game started!".to_string();
-                let peer_is_player1 = app_state.is_player1.map(|is_player1| !is_player1);
+                let peer_is_black = app_state.is_black.map(|is_black| !is_black);
                 app_state
                     .game_state
                     .as_ref()
                     .map(|game_state| WireMessage::State {
                         game_state: game_state.clone(),
                         game_is_ended: app_state.game_is_ended,
-                        is_player1: peer_is_player1,
+                        is_black: peer_is_black,
                     })
             }
             WireMessage::State {
                 game_state,
                 game_is_ended,
-                is_player1,
+                is_black,
             } => {
                 app_state.game_state = Some(game_state.clone());
                 app_state.game_has_started = true;
                 app_state.game_is_ended = game_is_ended;
-                app_state.is_player1 = is_player1;
+                app_state.is_black = is_black;
                 app_state.status = if game_is_ended {
                     winner_text(&game_state)
                 } else {
@@ -319,7 +319,7 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
                 app_state.connection = None;
                 app_state.game_has_started = false;
                 app_state.game_is_ended = false;
-                app_state.is_player1 = None;
+                app_state.is_black = None;
                 app_state.status = "Opponent left the game".to_string();
                 None
             }
@@ -334,15 +334,15 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
 }
 
 fn apply_remote_move(app_state: &mut AppState, position: Position) -> Result<(), String> {
-    let is_player1 = app_state
-        .is_player1
+    let is_black = app_state
+        .is_black
         .ok_or_else(|| "Peer move ignored: no local player role".to_string())?;
     let game_state = app_state
         .game_state
         .clone()
         .ok_or_else(|| "Peer move ignored: no game state".to_string())?;
 
-    if game_state.is_whites_turn == is_player1 {
+    if game_state.is_blacks_turn == is_black {
         return Err("Peer move ignored: not their turn".to_string());
     }
 
@@ -455,7 +455,7 @@ impl AppState {
             game_state: self.game_state.clone().unwrap_or_else(create_game_state),
             game_has_started: self.game_has_started,
             game_is_ended: self.game_is_ended,
-            is_player1: self.is_player1,
+            is_black: self.is_black,
             status: if self.status.is_empty() {
                 "Ready".to_string()
             } else {
@@ -508,15 +508,15 @@ impl AppState {
             return Ok(());
         }
 
-        let is_player1 = self
-            .is_player1
-            .map(|is_player1| !is_player1)
+        let is_black = self
+            .is_black
+            .map(|is_black| !is_black)
             .ok_or_else(|| "You are not in a game".to_string())?;
 
         self.game_state = Some(create_game_state());
         self.game_has_started = true;
         self.game_is_ended = false;
-        self.is_player1 = Some(is_player1);
+        self.is_black = Some(is_black);
         self.status = "Rematch started!".to_string();
         Ok(())
     }
@@ -576,7 +576,7 @@ mod tests {
             game_state: Some(create_game_state()),
             game_has_started: true,
             game_is_ended: false,
-            is_player1: Some(false),
+            is_black: Some(true),
             status: "Game started!".to_string(),
             game_link: Some(host_link),
             ..Default::default()
@@ -586,7 +586,7 @@ mod tests {
             game_state: Some(create_game_state()),
             game_has_started: false,
             game_is_ended: false,
-            is_player1: Some(false),
+            is_black: Some(false),
             status: "Joining game...".to_string(),
             ..Default::default()
         };
@@ -608,7 +608,7 @@ mod tests {
             WireMessage::State {
                 game_state: initial_state.clone(),
                 game_is_ended: false,
-                is_player1: Some(true),
+                is_black: Some(false),
             },
         )
         .await
@@ -622,12 +622,12 @@ mod tests {
             WireMessage::State {
                 game_state,
                 game_is_ended,
-                is_player1,
+                is_black,
             } => {
                 join_state.game_state = Some(game_state);
                 join_state.game_has_started = true;
                 join_state.game_is_ended = game_is_ended;
-                join_state.is_player1 = is_player1;
+                join_state.is_black = is_black;
             }
             message => panic!("expected state message, got {message:?}"),
         }
@@ -671,7 +671,7 @@ mod tests {
             game_state: Some(create_game_state()),
             game_has_started: true,
             game_is_ended: true,
-            is_player1: Some(true),
+            is_black: Some(false),
             status: "White wins!".to_string(),
             ..Default::default()
         };
@@ -681,7 +681,7 @@ mod tests {
         let snapshot = host_state.snapshot();
         assert!(snapshot.game_has_started);
         assert!(!snapshot.game_is_ended);
-        assert_eq!(snapshot.is_player1, Some(false));
+        assert_eq!(snapshot.is_black, Some(true));
         assert_eq!(snapshot.status, "Rematch started!");
         assert_eq!(snapshot.game_state, create_game_state());
     }
@@ -692,7 +692,7 @@ mod tests {
             game_state: Some(create_game_state()),
             game_has_started: true,
             game_is_ended: true,
-            is_player1: Some(false),
+            is_black: Some(true),
             status: "Black wins!".to_string(),
             ..Default::default()
         };
@@ -705,7 +705,7 @@ mod tests {
         let snapshot = join_state.snapshot();
         assert!(snapshot.game_has_started);
         assert!(!snapshot.game_is_ended);
-        assert_eq!(snapshot.is_player1, Some(true));
+        assert_eq!(snapshot.is_black, Some(false));
         assert_eq!(snapshot.game_state, create_game_state());
     }
 
@@ -715,7 +715,7 @@ mod tests {
             game_state: Some(create_game_state()),
             game_has_started: true,
             game_is_ended: true,
-            is_player1: Some(true),
+            is_black: Some(false),
             status: "White wins!".to_string(),
             ..Default::default()
         };
@@ -723,7 +723,7 @@ mod tests {
         host_state.start_rematch().unwrap();
         host_state.start_rematch().unwrap();
 
-        assert_eq!(host_state.snapshot().is_player1, Some(false));
+        assert_eq!(host_state.snapshot().is_black, Some(true));
     }
 
     async fn bind_loopback_endpoint() -> Endpoint {
