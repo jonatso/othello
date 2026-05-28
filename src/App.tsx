@@ -6,7 +6,7 @@ import TopInfo from "./components/TopInfo";
 import BottomInfo from "./components/BottomInfo";
 import ConnectionModal from "./components/ConnectionModal";
 import { invokeTauri, isTauriRuntime } from "./tauri";
-import type { Board, GameSnapshot, PeerEvent } from "./types";
+import type { Board, GameSnapshot, NearbyGame, PeerEvent } from "./types";
 
 const EMPTY_BOARD: Board = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => null));
 
@@ -35,6 +35,8 @@ const App = () => {
   const [snapshot, setSnapshot] = useState<GameSnapshot>(INITIAL_SNAPSHOT);
   const [joinRoomError, setJoinRoomError] = useState("");
   const [connectionPending, setConnectionPending] = useState<"host" | "join" | null>(null);
+  const [nearbyGames, setNearbyGames] = useState<NearbyGame[]>([]);
+  const [discoveryPending, setDiscoveryPending] = useState(false);
   const [modalIsOpen, setIsOpen] = useState(true);
 
   const isBlack = snapshot.isBlack;
@@ -112,6 +114,32 @@ const App = () => {
     };
   }, [applySnapshot, joinGame]);
 
+  useEffect(() => {
+    if (!modalIsOpen || !isTauriRuntime()) return;
+
+    let cancelled = false;
+
+    const refreshNearbyGames = async () => {
+      try {
+        setDiscoveryPending(true);
+        const games = await invokeTauri<NearbyGame[]>("discover_games");
+        if (!cancelled) setNearbyGames(games);
+      } catch {
+        if (!cancelled) setNearbyGames([]);
+      } finally {
+        if (!cancelled) setDiscoveryPending(false);
+      }
+    };
+
+    void refreshNearbyGames();
+    const interval = window.setInterval(refreshNearbyGames, 4500);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, [modalIsOpen]);
+
   return (
     <div className="grid min-h-screen place-items-center overflow-hidden bg-[#111214] bg-[linear-gradient(135deg,rgba(45,57,71,0.64),transparent_45%),linear-gradient(315deg,rgba(77,93,77,0.34),transparent_42%)] p-4 sm:p-6">
       <main className="grid w-full max-w-[780px] items-center justify-items-center gap-3 sm:gap-4">
@@ -174,6 +202,8 @@ const App = () => {
               .finally(() => setConnectionPending(null));
           }}
           joinRoomError={joinRoomError}
+          nearbyGames={nearbyGames}
+          discoveryPending={discoveryPending}
           pendingAction={connectionPending}
         />
       )}

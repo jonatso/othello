@@ -20,3 +20,9 @@ export interface GameSnapshot {
 export interface PeerEvent {
   snapshot: GameSnapshot;
 }
+
+export interface NearbyGame {
+  id: string;
+  name: string;
+  gameLink: string;
+}

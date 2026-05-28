@@ -1,5 +1,6 @@
 mod game;
 
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,11 +10,16 @@ use base64::Engine;
 use game::{apply_move, create_game_state, winner_text, GameSnapshot, GameState, Position};
 use iroh::endpoint::{presets, Connection};
 use iroh::{Endpoint, EndpointAddr};
+use mdns_sd::{ResolvedService, ServiceDaemon, ServiceEvent, ServiceInfo};
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Emitter, Manager, State};
 use tokio::sync::Mutex;
 
 const ALPN: &[u8] = b"com.jonatansolheim.othello/1";
+const DISCOVERY_SERVICE_TYPE: &str = "_othello._udp.local.";
+const DISCOVERY_VERSION: &str = "1";
+const DISCOVERY_LINK_CHUNK_SIZE: usize = 180;
+const DISCOVERY_SCAN_MS: u64 = 1200;
 const MAX_MESSAGE_SIZE: usize = 64 * 1024;
 
 type SharedState = Arc<Mutex<AppState>>;
@@ -28,12 +34,33 @@ struct AppState {
     is_black: Option<bool>,
     status: String,
     game_link: Option<String>,
+    discovery_advertisement: Option<DiscoveryAdvertisement>,
+}
+
+struct DiscoveryAdvertisement {
+    daemon: ServiceDaemon,
+    fullname: String,
+}
+
+impl Drop for DiscoveryAdvertisement {
+    fn drop(&mut self) {
+        let _ = self.daemon.unregister(&self.fullname);
+        let _ = self.daemon.shutdown();
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct PeerEvent {
     snapshot: GameSnapshot,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct NearbyGame {
+    id: String,
+    name: String,
+    game_link: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -61,17 +88,24 @@ async fn create_game(
     let endpoint = bind_endpoint().await.map_err(to_command_error)?;
     let game_state = create_game_state();
     let game_link = create_game_link(&endpoint.addr()).map_err(to_command_error)?;
+    let discovery_advertisement = start_discovery_advertisement(&game_link);
 
     {
         let mut app_state = state.lock().await;
+        app_state.discovery_advertisement = None;
         app_state.endpoint = Some(endpoint.clone());
         app_state.connection = None;
         app_state.game_state = Some(game_state);
         app_state.game_has_started = false;
         app_state.game_is_ended = false;
         app_state.is_black = Some(rand::random());
-        app_state.status = "Waiting for opponent".to_string();
+        app_state.status = if discovery_advertisement.is_ok() {
+            "Waiting for opponent".to_string()
+        } else {
+            "Waiting for opponent. Nearby discovery is unavailable.".to_string()
+        };
         app_state.game_link = Some(game_link);
+        app_state.discovery_advertisement = discovery_advertisement.ok();
     }
 
     start_accept_loop(endpoint, state.inner().clone(), app);
@@ -89,6 +123,7 @@ async fn join_game(
 
     {
         let mut app_state = state.lock().await;
+        app_state.discovery_advertisement = None;
         app_state.endpoint = Some(endpoint.clone());
         app_state.connection = None;
         app_state.game_state = Some(create_game_state());
@@ -171,6 +206,7 @@ async fn leave_game(state: State<'_, SharedState>) -> Result<GameSnapshot, Strin
         let mut app_state = state.lock().await;
         connection = app_state.connection.take();
         endpoint = app_state.endpoint.take();
+        app_state.discovery_advertisement = None;
         app_state.game_state = Some(create_game_state());
         app_state.game_has_started = false;
         app_state.game_is_ended = false;
@@ -193,6 +229,13 @@ async fn leave_game(state: State<'_, SharedState>) -> Result<GameSnapshot, Strin
 #[tauri::command]
 async fn current_game(state: State<'_, SharedState>) -> Result<GameSnapshot, String> {
     Ok(snapshot(&state).await)
+}
+
+#[tauri::command]
+async fn discover_games() -> Result<Vec<NearbyGame>, String> {
+    discover_nearby_games()
+        .await
+        .map_err(|error| format!("{error:#}"))
 }
 
 #[tauri::command]
@@ -242,6 +285,7 @@ async fn register_connection(connection: Connection, state: SharedState, app: Ap
     {
         let mut app_state = state.lock().await;
         app_state.connection = Some(connection.clone());
+        app_state.discovery_advertisement = None;
         if app_state.is_black == Some(false) {
             app_state.game_has_started = true;
             app_state.status = "Game started!".to_string();
@@ -320,6 +364,7 @@ async fn handle_peer_message(message: WireMessage, state: SharedState, app: AppH
                 app_state.game_has_started = false;
                 app_state.game_is_ended = false;
                 app_state.is_black = None;
+                app_state.discovery_advertisement = None;
                 app_state.status = "Opponent left the game".to_string();
                 None
             }
@@ -427,6 +472,123 @@ fn parse_game_link(link: &str) -> Result<EndpointAddr> {
     serde_json::from_slice(&bytes).context("game link payload is not a valid iroh address")
 }
 
+fn start_discovery_advertisement(game_link: &str) -> Result<DiscoveryAdvertisement> {
+    let daemon = ServiceDaemon::new().context("failed to start nearby discovery")?;
+    let properties = discovery_properties(game_link);
+    let instance_name = format!("Othello {}", rand::random::<u16>());
+    let host_name = format!("othello-{}.local.", rand::random::<u16>());
+    let service_info = ServiceInfo::new(
+        DISCOVERY_SERVICE_TYPE,
+        &instance_name,
+        &host_name,
+        "",
+        9,
+        &properties[..],
+    )
+    .context("failed to create nearby discovery service")?
+    .enable_addr_auto();
+    let fullname = service_info.get_fullname().to_string();
+
+    daemon
+        .register(service_info)
+        .context("failed to advertise nearby game")?;
+
+    Ok(DiscoveryAdvertisement { daemon, fullname })
+}
+
+async fn discover_nearby_games() -> Result<Vec<NearbyGame>> {
+    let daemon = ServiceDaemon::new().context("failed to start nearby discovery")?;
+    let receiver = daemon
+        .browse(DISCOVERY_SERVICE_TYPE)
+        .context("failed to browse nearby games")?;
+    let mut games = HashMap::<String, NearbyGame>::new();
+    let started = std::time::Instant::now();
+
+    while let Some(remaining) =
+        Duration::from_millis(DISCOVERY_SCAN_MS).checked_sub(started.elapsed())
+    {
+        match tokio::time::timeout(remaining, receiver.recv_async()).await {
+            Ok(Ok(ServiceEvent::ServiceResolved(service))) => {
+                if let Some(game_link) = discovery_game_link(&service) {
+                    let id = service.get_fullname().to_string();
+                    let name = discovery_display_name(service.get_fullname());
+                    games.insert(
+                        game_link.clone(),
+                        NearbyGame {
+                            id,
+                            name,
+                            game_link,
+                        },
+                    );
+                }
+            }
+            Ok(Ok(_)) => {}
+            Ok(Err(_)) | Err(_) => break,
+        }
+    }
+
+    let _ = daemon.stop_browse(DISCOVERY_SERVICE_TYPE);
+    let _ = daemon.shutdown();
+
+    let mut games = games.into_values().collect::<Vec<_>>();
+    games.sort_by(|a, b| a.name.cmp(&b.name));
+    games.truncate(8);
+    Ok(games)
+}
+
+fn discovery_properties(game_link: &str) -> Vec<(String, String)> {
+    let mut properties = vec![
+        ("version".to_string(), DISCOVERY_VERSION.to_string()),
+        (
+            "chunks".to_string(),
+            game_link
+                .as_bytes()
+                .chunks(DISCOVERY_LINK_CHUNK_SIZE)
+                .len()
+                .to_string(),
+        ),
+    ];
+
+    for (index, chunk) in game_link
+        .as_bytes()
+        .chunks(DISCOVERY_LINK_CHUNK_SIZE)
+        .enumerate()
+    {
+        properties.push((
+            format!("link{index}"),
+            String::from_utf8_lossy(chunk).to_string(),
+        ));
+    }
+
+    properties
+}
+
+fn discovery_game_link(service: &ResolvedService) -> Option<String> {
+    if service.get_property_val_str("version") != Some(DISCOVERY_VERSION) {
+        return None;
+    }
+
+    let chunks = service
+        .get_property_val_str("chunks")?
+        .parse::<usize>()
+        .ok()?;
+    let mut game_link = String::new();
+
+    for index in 0..chunks {
+        game_link.push_str(service.get_property_val_str(&format!("link{index}"))?);
+    }
+
+    game_link.starts_with("othello://").then_some(game_link)
+}
+
+fn discovery_display_name(fullname: &str) -> String {
+    fullname
+        .strip_suffix(DISCOVERY_SERVICE_TYPE)
+        .unwrap_or(fullname)
+        .trim_end_matches('.')
+        .replace("\\032", " ")
+}
+
 async fn emit_snapshot(state: &SharedState, app: &AppHandle) {
     let snapshot = {
         let app_state = state.lock().await;
@@ -496,6 +658,7 @@ pub fn run() {
             make_move,
             leave_game,
             current_game,
+            discover_games,
             request_rematch
         ])
         .run(tauri::generate_context!())
